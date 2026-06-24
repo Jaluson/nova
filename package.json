@@ -1,0 +1,16 @@
+{
+  "name": "nova",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev:css": "tailwindcss -i ./src/input.css -o ./src/styles.css --watch",
+    "build:css": "tailwindcss -i ./src/input.css -o ./src/styles.css --minify",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@tailwindcss/cli": "^4.3.0",
+    "tailwindcss": "^4.3.0"
+  }
+}

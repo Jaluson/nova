@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Starter"
+  short_description: "Confirm intent, decompose tasks, execute, and summarize."
+  default_prompt: "Use $task-starter to confirm my intent, split the work, wait for approval, execute, and summarize results."
