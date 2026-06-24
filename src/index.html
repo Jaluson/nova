@@ -8,90 +8,137 @@
   <script type="module" src="/app.js" defer></script>
 </head>
 <body>
-  <div id="main-view" class="hidden app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark">N</span>
-        <div>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+  <div id="main-view" class="hidden app-shell app-surface">
+    <header class="app-header">
+      <div class="brand-cluster">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <div class="brand-copy">
           <div class="brand-title">Nova</div>
-          <div id="tool-description" class="muted tiny">JDK 与 Maven 运行时管理</div>
+          <p class="brand-subtitle">Java runtime control desk</p>
         </div>
       </div>
 
       <div class="segmented" aria-label="模块切换">
-        <button id="module-jdk" class="segmented-button is-active" aria-label="切换到 JDK 模块">JDK</button>
-        <button id="module-maven" class="segmented-button" aria-label="切换到 Maven 模块">Maven</button>
+        <button id="module-jdk" class="segmented-button is-active" type="button" aria-label="切换到 JDK 模块">JDK</button>
+        <button id="module-maven" class="segmented-button" type="button" aria-label="切换到 Maven 模块">Maven</button>
       </div>
 
-      <div class="topbar-actions">
-        <button id="btn-install" class="btn btn-primary">安装版本</button>
-        <button id="download-indicator" class="download-chip hidden" aria-label="查看下载进度">
-          <span id="download-progress-ring" class="progress-ring"></span>
-          <span>
+      <div class="header-actions">
+        <button id="download-indicator" class="download-chip hidden" type="button" aria-label="查看下载进度">
+          <span id="download-progress-ring" class="progress-ring" aria-hidden="true"></span>
+          <span class="download-copy">
             <span id="download-task-count" class="download-count">0 个任务</span>
             <span id="download-progress-text" class="download-progress">0%</span>
           </span>
         </button>
-        <button id="btn-import" class="btn btn-secondary">本地导入</button>
-        <button id="btn-refresh" class="btn btn-secondary">刷新</button>
-        <button id="btn-configure-java-home" class="btn btn-secondary">配置 JAVA_HOME</button>
-        <button id="btn-configure-system-home" class="btn btn-secondary">配置系统 JAVA_HOME</button>
-        <button id="btn-settings" class="icon-btn" aria-label="打开设置">⚙</button>
+        <button id="btn-settings" class="btn btn-ghost" type="button">设置</button>
       </div>
     </header>
 
-    <main class="workspace">
-      <section class="summary-band">
-        <div>
+    <main id="main-content" class="workspace">
+      <section class="hero-panel panel-shell">
+        <div class="hero-copy">
+          <p class="eyebrow">Windows Java toolchain</p>
           <h1 id="tool-title">JDK 版本</h1>
-          <p id="current-version-text" aria-live="polite">当前: 无</p>
+          <p id="tool-description" class="hero-description">安装、切换并维护当前工作区使用的运行时版本。</p>
+          <p id="current-version-text" class="hero-current" aria-live="polite">当前: 无</p>
         </div>
-        <div class="summary-meta">
-          <span id="status-text" aria-live="polite">已加载 0 个版本</span>
+
+        <div class="hero-status">
+          <div class="status-summary">
+            <span class="section-label">托管状态</span>
+            <span id="status-text" class="status-value" aria-live="polite">已加载 0 个版本</span>
+          </div>
+
+          <div id="java-home-warning" class="warning-bar hidden" aria-live="polite">
+            <span>JAVA_HOME 尚未指向 Nova 管理路径</span>
+            <button id="btn-warning-configure-java-home" class="btn btn-warning" type="button">立即修复</button>
+          </div>
         </div>
       </section>
 
-      <div id="java-home-warning" class="warning-bar hidden" aria-live="polite">
-        <span>JAVA_HOME 尚未指向 Nova 管理路径</span>
-        <button id="btn-warning-configure-java-home" class="btn btn-warning">一键配置</button>
+      <div class="workspace-grid">
+        <aside class="panel-shell action-panel" aria-label="操作面板">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">操作面板</p>
+              <h2>快速完成安装与切换</h2>
+            </div>
+            <p class="panel-copy">常用操作集中在一处，避免在多个区域反复查找。</p>
+          </div>
+
+          <div class="action-stack">
+            <button id="btn-install" class="btn btn-primary" type="button">安装新版本</button>
+            <button id="btn-import" class="btn btn-secondary" type="button">导入本地版本</button>
+            <button id="btn-refresh" class="btn btn-secondary" type="button">刷新列表</button>
+            <button id="btn-configure-java-home" class="btn btn-secondary" type="button">配置 JAVA_HOME</button>
+            <button id="btn-configure-system-home" class="btn btn-secondary" type="button">配置系统 JAVA_HOME</button>
+          </div>
+
+          <div class="signal-card">
+            <p class="section-label">使用建议</p>
+            <p class="signal-title">先切换当前版本，再同步环境变量</p>
+            <p class="signal-copy">Nova 管理安装目录与符号链接，环境变量只需要指向当前链接路径。</p>
+          </div>
+        </aside>
+
+        <section class="panel-shell inventory-panel">
+          <div class="panel-heading inventory-heading">
+            <div>
+              <p class="section-label">本地版本库</p>
+              <h2>已安装版本</h2>
+            </div>
+            <p class="panel-copy">切换当前使用中的版本，或清理已不再需要的旧版本。</p>
+          </div>
+
+          <section id="version-table" class="table-shell">
+            <div class="version-grid table-head">
+              <span>版本</span>
+              <span id="table-provider-heading">发行方</span>
+              <span>状态</span>
+              <span>操作</span>
+            </div>
+            <div id="version-list"></div>
+            <div id="empty-state" class="empty-state hidden">
+              <div id="empty-state-title" class="empty-title">尚未安装任何 JDK 版本</div>
+              <div id="empty-state-hint" class="muted">点击左侧操作面板开始安装或导入。</div>
+            </div>
+          </section>
+        </section>
       </div>
-
-      <section id="version-table" class="table-shell">
-        <div class="version-grid table-head">
-          <span>版本</span>
-          <span id="table-provider-heading">发行版</span>
-          <span>状态</span>
-          <span>操作</span>
-        </div>
-        <div id="version-list"></div>
-        <div id="empty-state" class="empty-state hidden">
-          <div id="empty-state-title" class="empty-title">尚未安装任何 JDK 版本</div>
-          <div id="empty-state-hint" class="muted">点击“安装版本”开始</div>
-        </div>
-      </section>
     </main>
   </div>
 
   <div id="setup-view" class="hidden setup-shell">
-    <div class="setup-panel">
-      <div class="setup-header">
-        <span class="brand-mark">N</span>
+    <div class="setup-panel panel-shell">
+      <div class="setup-intro">
         <div>
+          <p class="eyebrow">First run</p>
           <h1>初始化 Nova</h1>
-          <p class="muted">选择 JDK 存储目录，并准备 JAVA_HOME 指向 Nova 管理的当前版本。</p>
+          <p class="setup-copy">为本机建立一个稳定的 JDK 管理入口，让后续安装、切换和回退都落在同一条路径上。</p>
+        </div>
+        <div class="setup-note">
+          <span class="section-label">初始化目标</span>
+          <p>确认版本存储目录、当前软链接路径，以及需要执行的环境变量命令。</p>
         </div>
       </div>
 
-      <section class="form-section">
-        <h2>JDK 存储位置</h2>
+      <section class="form-section step-card">
+        <div class="step-kicker">步骤 1</div>
+        <h2>选择 JDK 存储目录</h2>
+        <p class="panel-copy">Nova 会把下载与导入的版本统一放在这里，便于集中管理。</p>
         <div class="field-row">
           <input id="setup-versions-dir" type="text" readonly class="input" />
-          <button id="btn-browse-versions" class="btn btn-secondary">浏览</button>
+          <button id="btn-browse-versions" class="btn btn-secondary" type="button">浏览</button>
         </div>
       </section>
 
-      <section class="form-section">
-        <h2>符号链接路径</h2>
+      <section class="form-section step-card">
+        <div class="step-kicker">步骤 2</div>
+        <h2>确认符号链接路径</h2>
+        <p class="panel-copy">当前版本会始终映射到这个路径，建议把环境变量指向它而不是具体版本目录。</p>
         <label class="radio-row">
           <input type="radio" name="symlink-mode" value="default" checked />
           <span>使用默认路径</span>
@@ -99,19 +146,21 @@
         </label>
         <label class="radio-row">
           <input type="radio" name="symlink-mode" value="custom" />
-          <span>自定义路径</span>
+          <span>使用自定义路径</span>
         </label>
         <div id="custom-symlink-row" class="field-row hidden">
           <input id="setup-symlink-path" type="text" placeholder="D:\Java\current" class="input" />
-          <button id="btn-browse-symlink" class="btn btn-secondary">浏览</button>
+          <button id="btn-browse-symlink" class="btn btn-secondary" type="button">浏览</button>
         </div>
       </section>
 
-      <section class="form-section">
-        <h2>环境变量命令</h2>
+      <section class="form-section step-card">
+        <div class="step-kicker">步骤 3</div>
+        <h2>同步环境变量</h2>
+        <p class="panel-copy">先复制命令，再确认已完成配置。后续切换版本时无需反复修改路径。</p>
         <div class="segmented small">
-          <button class="env-tab segmented-button is-active" data-tab="cmd">CMD</button>
-          <button class="env-tab segmented-button" data-tab="powershell">PowerShell</button>
+          <button class="env-tab segmented-button is-active" type="button" data-tab="cmd">CMD</button>
+          <button class="env-tab segmented-button" type="button" data-tab="powershell">PowerShell</button>
         </div>
         <div id="env-cmd" class="code-box env-content">
           <div class="copy-line" data-copy></div>
@@ -123,65 +172,81 @@
         </div>
         <label class="check-row">
           <input type="checkbox" id="setup-env-done" />
-          <span>我已完成环境变量配置</span>
+          <span>我已经完成环境变量配置</span>
         </label>
       </section>
 
       <div class="form-actions">
-        <button id="btn-complete-setup" class="btn btn-primary">完成设置</button>
+        <button id="btn-complete-setup" class="btn btn-primary" type="button">完成设置</button>
       </div>
     </div>
   </div>
 
-  <div id="settings-view" class="hidden app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <button id="btn-settings-back" class="icon-btn" aria-label="返回">←</button>
-        <div>
+  <div id="settings-view" class="hidden app-shell app-surface">
+    <header class="app-header">
+      <div class="brand-cluster">
+        <button id="btn-settings-back" class="btn btn-ghost" type="button" aria-label="返回主页">返回</button>
+        <div class="brand-copy">
           <div class="brand-title">设置</div>
-          <div class="muted tiny">路径、下载源与 Maven settings.xml</div>
+          <p class="brand-subtitle">路径、下载源与 Maven 配置</p>
         </div>
       </div>
-      <button id="btn-save-settings" class="btn btn-primary">保存设置</button>
+      <div class="header-actions">
+        <button id="btn-save-settings" class="btn btn-primary" type="button">保存设置</button>
+      </div>
     </header>
 
     <main class="settings-layout">
-      <section class="panel">
-        <h2>JDK</h2>
+      <section class="panel panel-shell">
+        <div class="panel-heading">
+          <div>
+            <p class="section-label">JDK</p>
+            <h2>安装目录与当前链接</h2>
+          </div>
+        </div>
+
         <label class="label">安装目录</label>
         <div class="field-row">
           <input id="settings-versions-dir" type="text" readonly class="input" />
-          <button id="btn-settings-browse-versions" class="btn btn-secondary">浏览</button>
+          <button id="btn-settings-browse-versions" class="btn btn-secondary" type="button">浏览</button>
         </div>
 
         <label class="radio-row">
           <input type="radio" name="settings-symlink-mode" value="default" checked />
-          <span>默认链接</span>
+          <span>默认链接路径</span>
           <code id="settings-default-symlink" class="path-text"></code>
         </label>
         <label class="radio-row">
           <input type="radio" name="settings-symlink-mode" value="custom" />
-          <span>自定义链接</span>
+          <span>自定义链接路径</span>
         </label>
         <div id="settings-custom-symlink-row" class="field-row hidden">
           <input id="settings-symlink-path" type="text" placeholder="D:\Java\current" class="input" />
-          <button id="btn-settings-browse-symlink" class="btn btn-secondary">浏览</button>
+          <button id="btn-settings-browse-symlink" class="btn btn-secondary" type="button">浏览</button>
         </div>
         <p id="settings-symlink-status" class="hint-ok"></p>
 
-        <label class="label">JAVA_HOME</label>
+        <label class="label">JAVA_HOME 命令</label>
         <div class="code-box inline-code">
           <code id="settings-env-symlink"></code>
-          <button id="btn-copy-env" class="icon-btn" aria-label="复制 JAVA_HOME 命令">复制</button>
+          <button id="btn-copy-env" class="btn btn-secondary" type="button" aria-label="复制 JAVA_HOME 命令">复制</button>
         </div>
         <code id="settings-env-cmd" class="visually-hidden"></code>
-        <button id="btn-settings-configure-java-home" class="btn btn-secondary full">配置 JAVA_HOME</button>
-        <button id="btn-settings-configure-system-java-home" class="btn btn-secondary full">配置系统 JAVA_HOME</button>
+        <div class="stacked-actions">
+          <button id="btn-settings-configure-java-home" class="btn btn-secondary full" type="button">配置 JAVA_HOME</button>
+          <button id="btn-settings-configure-system-java-home" class="btn btn-secondary full" type="button">配置系统 JAVA_HOME</button>
+        </div>
       </section>
 
-      <section class="panel">
-        <h2>下载源</h2>
-        <label class="label">默认 JDK 下载源</label>
+      <section class="panel panel-shell">
+        <div class="panel-heading">
+          <div>
+            <p class="section-label">下载源</p>
+            <h2>默认 JDK 下载来源</h2>
+          </div>
+        </div>
+
+        <label class="label">默认下载源</label>
         <select id="settings-default-source" class="input">
           <option value="tsinghua">Tsinghua</option>
           <option value="corretto">Corretto</option>
@@ -190,12 +255,18 @@
         </select>
       </section>
 
-      <section class="panel">
-        <h2>Maven 版本</h2>
+      <section class="panel panel-shell">
+        <div class="panel-heading">
+          <div>
+            <p class="section-label">Maven</p>
+            <h2>版本目录与环境变量</h2>
+          </div>
+        </div>
+
         <label class="label">安装目录</label>
         <div class="field-row">
           <input id="settings-maven-versions-dir" type="text" readonly class="input" />
-          <button id="btn-settings-browse-maven-versions" class="btn btn-secondary">浏览</button>
+          <button id="btn-settings-browse-maven-versions" class="btn btn-secondary" type="button">浏览</button>
         </div>
 
         <label class="radio-row">
@@ -209,34 +280,44 @@
         </label>
         <div id="settings-maven-custom-symlink-row" class="field-row hidden">
           <input id="settings-maven-symlink-path" type="text" placeholder="D:\Maven\current" class="input" />
-          <button id="btn-settings-browse-maven-symlink" class="btn btn-secondary">浏览</button>
+          <button id="btn-settings-browse-maven-symlink" class="btn btn-secondary" type="button">浏览</button>
         </div>
+
         <label class="label">MAVEN_HOME 命令</label>
         <div class="code-box inline-code">
           <code id="settings-maven-env-cmd"></code>
-          <button id="btn-copy-maven-env" class="icon-btn" aria-label="复制 MAVEN_HOME 命令">复制</button>
+          <button id="btn-copy-maven-env" class="btn btn-secondary" type="button" aria-label="复制 MAVEN_HOME 命令">复制</button>
         </div>
-        <button id="btn-settings-configure-maven-home" class="btn btn-secondary full">配置 MAVEN_HOME</button>
-        <button id="btn-settings-configure-system-maven-home" class="btn btn-secondary full">配置系统 MAVEN_HOME</button>
+        <div class="stacked-actions">
+          <button id="btn-settings-configure-maven-home" class="btn btn-secondary full" type="button">配置 MAVEN_HOME</button>
+          <button id="btn-settings-configure-system-maven-home" class="btn btn-secondary full" type="button">配置系统 MAVEN_HOME</button>
+        </div>
       </section>
 
-      <section class="panel wide">
-        <h2>Maven settings.xml</h2>
+      <section class="panel panel-shell wide">
+        <div class="panel-heading">
+          <div>
+            <p class="section-label">Maven settings.xml</p>
+            <h2>本地仓库与镜像配置</h2>
+          </div>
+          <p class="panel-copy">保持 settings.xml、镜像与本地仓库在同一页内集中维护。</p>
+        </div>
+
         <label class="label">settings.xml</label>
         <div class="field-row">
           <input id="settings-maven-settings-path" type="text" class="input" />
-          <button id="btn-settings-browse-maven-settings" class="btn btn-secondary">浏览</button>
+          <button id="btn-settings-browse-maven-settings" class="btn btn-secondary" type="button">浏览</button>
         </div>
 
         <label class="label">本地仓库</label>
         <div class="field-row">
-          <input id="settings-maven-local-repo" type="text" placeholder="留空则使用 Maven 默认值" class="input" />
-          <button id="btn-settings-browse-maven-local-repo" class="btn btn-secondary">浏览</button>
+          <input id="settings-maven-local-repo" type="text" placeholder="留空则使用 Maven 默认仓库" class="input" />
+          <button id="btn-settings-browse-maven-local-repo" class="btn btn-secondary" type="button">浏览</button>
         </div>
 
         <div class="section-row">
           <span class="label">镜像</span>
-          <button id="btn-add-maven-mirror" class="btn btn-secondary">添加镜像</button>
+          <button id="btn-add-maven-mirror" class="btn btn-secondary" type="button">添加镜像</button>
         </div>
         <div class="mirror-head">
           <span>ID</span>
@@ -254,29 +335,36 @@
     <div id="install-modal-content" class="modal-panel">
       <div class="modal-header">
         <div>
+          <p class="section-label">版本流转</p>
           <h2 id="install-modal-title">安装 JDK</h2>
-          <p id="install-modal-subtitle" class="muted tiny">选择远程版本或导入本地目录/ZIP。</p>
+          <p id="install-modal-subtitle" class="panel-copy">选择远程版本，或导入本地目录 / ZIP 包。</p>
         </div>
-        <button id="btn-close-modal" class="icon-btn" aria-label="关闭对话框">×</button>
+        <button id="btn-close-modal" class="btn btn-ghost" type="button" aria-label="关闭对话框">关闭</button>
       </div>
 
       <div class="modal-body">
         <section id="remote-install-section" class="form-section">
           <div class="section-row">
-            <h3>远程安装</h3>
-            <p id="remote-status" class="muted tiny" aria-live="polite">选择下载源和主版本</p>
+            <div>
+              <p class="section-label">远程安装</p>
+              <h3>选择可下载版本</h3>
+            </div>
+            <p id="remote-status" class="muted tiny" aria-live="polite">选择下载源和主版本。</p>
           </div>
+
           <div id="remote-query-controls" class="remote-controls">
             <select id="install-source" class="input">
               <option value="tsinghua">Tsinghua</option>
-              <option value="corretto">Corretto (推荐)</option>
+              <option value="corretto">Corretto</option>
               <option value="adoptium">Adoptium</option>
               <option value="zulu">Zulu</option>
             </select>
             <input id="remote-major" type="number" min="8" step="1" placeholder="全部版本" class="input" />
-            <button id="btn-load-remote" class="btn btn-secondary">查询</button>
+            <button id="btn-load-remote" class="btn btn-secondary" type="button">查询</button>
           </div>
-          <div id="maven-remote-note" class="notice hidden">Maven 版本来自 Apache Maven 元数据，下载使用 Apache 官方归档。</div>
+
+          <div id="maven-remote-note" class="notice hidden">Maven 版本来自 Apache Maven 官方元数据，下载使用 Apache 官方归档。</div>
+
           <div class="table-shell compact">
             <div class="remote-grid table-head">
               <span>版本</span>
@@ -291,14 +379,19 @@
         </section>
 
         <section id="local-import-section" class="form-section">
-          <h3>本地导入</h3>
-          <p id="local-import-hint" class="muted tiny">目录导入将创建软链接，ZIP 导入将解压到本地版本目录。</p>
-          <div class="two-actions">
-            <button id="btn-browse-dir" class="btn btn-secondary">浏览目录</button>
-            <button id="btn-browse-file" class="btn btn-secondary">浏览 ZIP</button>
+          <div class="section-row">
+            <div>
+              <p class="section-label">本地导入</p>
+              <h3>导入已有版本</h3>
+            </div>
           </div>
-          <input id="import-path" type="text" placeholder="已选择的路径将显示在此处" readonly class="input" />
-          <button id="btn-import-local" class="btn btn-primary full">导入</button>
+          <p id="local-import-hint" class="panel-copy">目录导入会创建软链接，ZIP 导入会解压到 Nova 管理目录。</p>
+          <div class="two-actions">
+            <button id="btn-browse-dir" class="btn btn-secondary" type="button">浏览目录</button>
+            <button id="btn-browse-file" class="btn btn-secondary" type="button">浏览 ZIP</button>
+          </div>
+          <input id="import-path" type="text" placeholder="已选择的路径将显示在这里" readonly class="input" />
+          <button id="btn-import-local" class="btn btn-primary full" type="button">开始导入</button>
         </section>
 
         <div id="install-progress" class="progress-block hidden">
@@ -307,6 +400,7 @@
           </div>
           <p id="progress-text" class="muted tiny">0%</p>
         </div>
+
         <p id="install-error" class="error-text hidden"></p>
       </div>
 
