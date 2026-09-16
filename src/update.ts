@@ -1,5 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import path from 'node:path';
+import { access } from 'node:fs/promises';
 import { t } from './i18n.js';
 
 const run = promisify(execFile);
@@ -24,6 +26,16 @@ export async function latestVersion(current: string, fetcher: typeof fetch = fet
 }
 
 export async function updatePackage(): Promise<void> {
-  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  await run(npm, ['install', '--global', `${PACKAGE}@latest`], { windowsHide: true, maxBuffer: 1024 * 1024 });
+  const npmCli = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  try {
+    await access(npmCli);
+    await run(process.execPath, [npmCli, 'install', '--global', `${PACKAGE}@latest`], { windowsHide: true, maxBuffer: 1024 * 1024 });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+      await run(npm, ['install', '--global', `${PACKAGE}@latest`], { windowsHide: true, maxBuffer: 1024 * 1024 });
+      return;
+    }
+    throw error;
+  }
 }
