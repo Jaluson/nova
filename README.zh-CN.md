@@ -108,7 +108,7 @@ nova --lang en ls          # 仅本次使用英文
 
 ## 现有 JDK 和列表
 
-交互式 `ls` 和 `ls-remote` 使用紧凑分页；使用 `--all` 查看完整列表，使用 `--page` 输出指定页，使用 `--verbose` 显示路径。输出到管道时不会插入终端控制符。
+交互式 `ls` 和 `ls-remote` 会打开 Nova TUI。使用 `↑/↓` 或 `j/k` 选择，`/` 搜索，`?` 查看帮助，`Enter` 安装或切换，`d` 设置默认版本，`x` 卸载，`q` 退出。使用 `--plain` 输出紧凑文本，使用 `--all` 查看完整列表，使用 `--page` 输出指定页，使用 `--verbose` 显示路径。JSON 和管道输出保持稳定且不包含终端控制符。
 
 如果 `JAVA_HOME` 已经指向有效 JDK，`nova ls` 会将其显示为外部 JDK，不会导入、移动或删除它。首次激活 nova 时会记住原值，`nova deactivate` 可以恢复。nova 只管理自己安装的 Corretto。
 

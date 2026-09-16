@@ -2,6 +2,7 @@ import { t } from './i18n.js';
 import { emitKeypressEvents, type Key } from 'node:readline';
 import { stripVTControlCharacters } from 'node:util';
 import { cancellation } from './network.js';
+import { displayTui, type TuiActions } from './tui.js';
 
 export interface ListRow {
   version: string;
@@ -10,7 +11,7 @@ export interface ListRow {
   plain: string;
   priority?: number;
 }
-export interface ListOptions { all?: boolean; page?: number; pageSize?: number; verbose?: boolean; json?: boolean; jsonData?: unknown; noColor?: boolean }
+export interface ListOptions { all?: boolean; page?: number; pageSize?: number; verbose?: boolean; json?: boolean; jsonData?: unknown; noColor?: boolean; plain?: boolean; tuiActions?: TuiActions }
 export interface ListLayout { title: string; statuses?: boolean }
 
 const segments = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
@@ -85,7 +86,7 @@ export async function displayList(rows: ListRow[], layout: ListLayout, options: 
   }
   const terminal = Boolean(process.stdout.isTTY) && process.env.TERM !== 'dumb';
   const explicitPage = options.page !== undefined || options.pageSize !== undefined;
-  if (options.all || (!terminal && !explicitPage)) {
+  if (options.all || options.plain || (!terminal && !explicitPage)) {
     for (const row of rows) console.log(row.plain);
     return;
   }
@@ -95,6 +96,10 @@ export async function displayList(rows: ListRow[], layout: ListLayout, options: 
   let page = options.page ?? 1;
   let selected = 0;
   const canBrowse = terminal && Boolean(process.stdin.isTTY) && options.page === undefined && ordered.length > size();
+  if (terminal && Boolean(process.stdin.isTTY) && !options.page && !options.all && !options.plain) {
+    await displayTui(ordered, layout, options, options.tuiActions);
+    return;
+  }
   if (!canBrowse) {
     process.stdout.write(renderPage(ordered, layout, options, page, size(), width(), false));
     return;

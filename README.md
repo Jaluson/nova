@@ -125,7 +125,7 @@ Language precedence is `--lang`, `NOVA_LANG`, saved preference, then the system 
 
 ## Lists and existing Java installations
 
-Interactive `ls` and `ls-remote` use compact pages. Use `--all` for a complete list, `--page` for a static page, and `--verbose` to include paths. A pipe receives plain output without terminal controls.
+Interactive `ls` and `ls-remote` open the Nova TUI. Use `↑/↓` or `j/k` to select, `/` to search, `?` for help, `Enter` to install or switch, `d` to set a default, `x` to uninstall, and `q` to quit. Use `--plain` for compact text, `--all` for a complete list, `--page` for a static page, and `--verbose` to include paths. JSON and piped output remain stable and contain no terminal controls.
 
 If `JAVA_HOME` already points to a valid JDK, `nova ls` shows it as an external JDK without importing, moving, or deleting it. The first nova activation remembers that value, and `nova deactivate` restores it. Nova manages only its own Corretto installations.
 

@@ -132,6 +132,7 @@ function listOptions(command: Command): Command {
     .option('--page <number>', t("Print one page without interactive browsing"), positiveInteger)
     .option('--page-size <number>', t("Versions per page (default: 20, limited by terminal height)"), positiveInteger)
     .option('--json', t('Output JSON for scripts and automation'))
+    .option('--plain', t('Force compact non-interactive text output'))
     .option('--no-color', t('Disable colors in the terminal interface'));
 }
 function platformOption(value: string): 'linux' | 'macos' | 'windows' {
@@ -164,7 +165,14 @@ listOptions(program.command('ls-remote [major]').description(t("Browse verified 
       version: artifact.version,
       status: `${artifact.platform}/${artifact.arch}${latestByMajor.has(artifact.version) ? ` · ${t('latest')}` : ''}`,
       plain: `${artifact.version}\t${artifact.platform}/${artifact.arch}`,
-    })), { title: `${t('Remote Corretto releases')}${major ? ` ${major}` : ''}`, statuses: true }, { ...options, jsonData: options.json ? { schema: 1, command: 'ls-remote', platform: target.platform, arch: target.arch, items: visible.map(a => ({ version: a.version, platform: a.platform, arch: a.arch, latest: latestByMajor.has(a.version) })) } : undefined });
+    })), { title: `${t('Remote Corretto releases')}${major ? ` ${major}` : ''}`, statuses: true }, { ...options, tuiActions: {
+      install: async (row, report) => {
+        const artifact = visible.find(item => item.version === row.version);
+        if (!artifact) throw new Error(t('Remote version is no longer available. Refresh and retry.'));
+        report(t('Installing Corretto {0}', artifact.version));
+        await store.install(artifact, undefined, (bytes, total) => report(t('Downloaded {0} MiB{1}', (bytes / 1048576).toFixed(1), total ? ` / ${(total / 1048576).toFixed(1)} MiB` : '')));
+      },
+    }, jsonData: options.json ? { schema: 1, command: 'ls-remote', platform: target.platform, arch: target.arch, items: visible.map(a => ({ version: a.version, platform: a.platform, arch: a.arch, latest: latestByMajor.has(a.version) })) } : undefined });
     if (!visible.length && !process.exitCode) console.log(t("No verified portable JDKs available for this platform."));
   });
 program.command('install <version>').description(t("Install a major’s latest patch or an exact Corretto version"))
@@ -204,7 +212,11 @@ listOptions(program.command('ls').description(t("Browse managed JDKs and the cur
   });
   if (current && !current.installation) rows.push({ version: current.version, status: `${t('current')}, ${t('external')} (${current.vendor})`, detail: current.javaHome, priority: 2,
     plain: `${current.version}  ${t('current')}  ${t('external')} (${current.vendor})\t${current.javaHome}` });
-  if (rows.length) await displayList(rows, { title: t('Installed JDKs'), statuses: true }, { ...options, jsonData: options.json ? { schema: 1, command: 'ls', items: rows.map(r => ({ version: r.version, status: r.status ?? '', path: r.detail ?? '', current: r.status?.includes(t('current')) ?? false, default: r.status?.includes(t('default')) ?? false, external: r.status?.includes(t('external')) ?? false })) } : undefined });
+  if (rows.length) await displayList(rows, { title: t('Installed JDKs'), statuses: true }, { ...options, tuiActions: {
+    use: async (row, report) => { const item = await store.resolve(row.version, target); report(t('Activating Corretto {0}', item.version)); await store.activate(item, target); },
+    setDefault: async (row, report) => { const item = await store.setDefault(row.version, target); report(t('Default: Corretto {0}', item.version)); },
+    uninstall: async (row, report) => { await store.uninstall(row.version, target, current?.installation?.id); report(t('Uninstalled Corretto {0}', row.version)); },
+  }, jsonData: options.json ? { schema: 1, command: 'ls', items: rows.map(r => ({ version: r.version, status: r.status ?? '', path: r.detail ?? '', current: r.status?.includes(t('current')) ?? false, default: r.status?.includes(t('default')) ?? false, external: r.status?.includes(t('external')) ?? false })) } : undefined });
   if (!installed.length && !current) console.log(t("No nova-managed JDKs installed. Run nova install 21."));
 });
 program.command('use [version]').description(t("Activate an installed JDK in this terminal; defaults to .novarc"))
