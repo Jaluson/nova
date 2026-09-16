@@ -1,5 +1,7 @@
 # nova
 
+[![CI](https://github.com/Jaluson/nova/actions/workflows/ci.yml/badge.svg)](https://github.com/Jaluson/nova/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/nova-jdk)](https://www.npmjs.com/package/nova-jdk) [![许可证](https://img.shields.io/npm/l/nova-jdk)](LICENSE)
+
 面向终端的跨平台 JDK 版本管理器，使用方式参考 nvm。首个版本只安装经过校验的 Amazon Corretto 便携版 JDK，支持 Bash、Zsh、Fish、PowerShell 和 Windows CMD。
 
 [English](README.md) · [npm](https://www.npmjs.com/package/nova-jdk) · [问题反馈](https://github.com/Jaluson/nova/issues)
@@ -50,6 +52,23 @@ nova ls
 ```
 
 常用命令包括 `ls-remote`、`install`、`ls`、`use`、`default`、`current`、`pin`、`deactivate`、`uninstall`、`doctor` 和 `language`。支持的 Corretto 主版本目前包括 8、11、17、21、25、26，具体补丁版本由平台远程索引决定。
+
+远程列表支持筛选和脚本输出：
+
+```sh
+nova ls-remote --latest                 # 每个主版本只显示最新版本
+nova ls-remote --platform linux --arch x64
+nova ls-remote 21 --json                # 输出 JSON 数组
+nova ls --json                          # 已安装 JDK 的 JSON
+```
+
+也可以使用统一配置入口：
+
+```sh
+nova config
+nova config language zh-CN
+nova config jdk-dir /data/nova-jdks
+```
 
 使用 `nova jdk-dir` 查看 JDK 存储目录，传入新目录可以移动所有已下载的 JDK：
 

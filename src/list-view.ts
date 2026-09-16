@@ -10,7 +10,7 @@ export interface ListRow {
   plain: string;
   priority?: number;
 }
-export interface ListOptions { all?: boolean; page?: number; pageSize?: number; verbose?: boolean }
+export interface ListOptions { all?: boolean; page?: number; pageSize?: number; verbose?: boolean; json?: boolean }
 export interface ListLayout { title: string; statuses?: boolean }
 
 const segments = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
@@ -73,6 +73,10 @@ export function renderPage(rows: ListRow[], layout: ListLayout, options: ListOpt
 }
 
 export async function displayList(rows: ListRow[], layout: ListLayout, options: ListOptions): Promise<void> {
+  if (options.json) {
+    console.log(JSON.stringify(rows.map(row => ({ version: row.version, ...(row.status ? { status: row.status } : {}), ...(row.detail ? { path: row.detail } : {}) }))));
+    return;
+  }
   const terminal = Boolean(process.stdout.isTTY) && process.env.TERM !== 'dumb';
   const explicitPage = options.page !== undefined || options.pageSize !== undefined;
   if (options.all || (!terminal && !explicitPage)) {

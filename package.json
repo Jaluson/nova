@@ -1,6 +1,6 @@
 {
   "name": "nova-jdk",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Cross-platform Amazon Corretto JDK version manager",
   "keywords": [
     "jdk",

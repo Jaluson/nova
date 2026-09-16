@@ -82,6 +82,22 @@ describe('list CLI output modes', () => {
     expect(output).toContain('STATUS');
     expect(output).toContain('linux/x64');
   });
+  it('supports JSON output for automation', async () => {
+    const root = await remoteCache();
+    const result = run(['ls-remote', '21', '--json'], root);
+    expect(result.status, result.stderr).toBe(0);
+    const parsed = JSON.parse(result.stdout) as Array<{ version: string; status: string }>;
+    expect(parsed).toHaveLength(45);
+    expect(parsed[0]).toHaveProperty('status', 'linux/x64');
+  });
+  it('filters remote releases and keeps only the newest per major', async () => {
+    const root = await remoteCache();
+    const result = run(['ls-remote', '--platform', 'linux', '--arch', 'x64', '--latest', '--json'], root);
+    expect(result.status, result.stderr).toBe(0);
+    const parsed = JSON.parse(result.stdout) as Array<{ version: string }>;
+    expect(parsed).toHaveLength(MAJORS.length);
+    expect(parsed.every(item => item.version.endsWith('.45.1.1'))).toBe(true);
+  });
   it('keeps a default local version on page one and supports full paths with --all', async () => {
     const store = new Store(await temp());
     for (const version of ['17.0.1.1.1', '21.0.1.1.1', '25.0.1.1.1']) await seed(store, version);

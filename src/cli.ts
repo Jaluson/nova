@@ -54,6 +54,20 @@ program.command('jdk-dir [directory]').description(t('Show or move the directory
     const moved = await store.relocateJdks(directory);
     console.log(t('JDK directory: {0}', moved));
   });
+program.command('config [key] [value]').description(t('Show or update nova configuration'))
+  .action(async (key?: string, value?: string) => {
+    const settings = await readSettings(store.root);
+    if (key === undefined) { console.log(JSON.stringify({ ...settings, jdkDir: await store.jdkDirectory() }, null, 2)); return; }
+    if (key === 'language') {
+      if (value === undefined) { console.log(settings.language ?? 'auto'); return; }
+      const preference = parseLanguage(value); await saveLanguage(store.root, preference); setLanguage(resolveLanguage(requestedLanguage, preference)); console.log(t('Language preference saved: {0}. Effective language: {1}.', preference, getLanguage())); return;
+    }
+    if (key === 'jdk-dir') {
+      if (value === undefined) { console.log(await store.jdkDirectory()); return; }
+      console.log(t('JDK directory: {0}', await store.relocateJdks(value))); return;
+    }
+    throw new Error(t('Unknown configuration key: {0}. Use language or jdk-dir.', key));
+  });
 
 async function active(): Promise<Installation> {
   const item = (await store.list(hostTarget())).find(i => i.id === process.env.NOVA_ACTIVE);
@@ -89,26 +103,40 @@ function listOptions(command: Command): Command {
   return command
     .addOption(new Option('--all', t("Print the full list without paging")).conflicts(['page', 'pageSize']))
     .option('--page <number>', t("Print one page without interactive browsing"), positiveInteger)
-    .option('--page-size <number>', t("Versions per page (default: 20, limited by terminal height)"), positiveInteger);
+    .option('--page-size <number>', t("Versions per page (default: 20, limited by terminal height)"), positiveInteger)
+    .option('--json', t('Output JSON for scripts and automation'));
+}
+function platformOption(value: string): 'linux' | 'macos' | 'windows' {
+  if (!['linux', 'macos', 'windows'].includes(value)) throw new InvalidArgumentError(t('Expected platform: linux, macos, or windows.'));
+  return value as 'linux' | 'macos' | 'windows';
+}
+function archOption(value: string): 'x64' | 'aarch64' {
+  if (!['x64', 'aarch64'].includes(value)) throw new InvalidArgumentError(t('Expected architecture: x64 or aarch64.'));
+  return value as 'x64' | 'aarch64';
 }
 
 listOptions(program.command('ls-remote [major]').description(t("Browse verified remote versions for this platform")))
   .option('--refresh', t("Refresh the release cache"))
-  .action(async (major: string | undefined, options: ListOptions & { refresh?: boolean }) => {
+  .option('--platform <platform>', t('Filter by platform: linux, macos, or windows'), platformOption)
+  .option('--arch <architecture>', t('Filter by architecture: x64 or aarch64'), archOption)
+  .option('--latest', t('Show only the newest release for each major version'))
+  .action(async (major: string | undefined, options: ListOptions & { refresh?: boolean; platform?: 'linux' | 'macos' | 'windows'; arch?: 'x64' | 'aarch64'; latest?: boolean }) => {
     if (major && normalizeVersion(major).includes('.')) throw new Error(t("ls-remote accepts a major version, for example 21."));
     const majors = major ? [majorOf(major)] : [...MAJORS];
-    const target = hostTarget();
+    const host = hostTarget();
+    const target = { platform: options.platform ?? host.platform, arch: options.arch ?? host.arch };
     const results = await Promise.allSettled(majors.map(value => provider.list(value, options.refresh)));
     const artifacts = results.flatMap((result, i) => {
       if (result.status === 'fulfilled') return result.value;
       console.error(t("Corretto {0}: {1}", majors[i], String(result.reason))); process.exitCode = 1; return [];
     }).filter(a => sameTarget(a, target)).sort((a, b) => compareVersions(b.version, a.version));
-    if (artifacts.length) await displayList(artifacts.map(artifact => ({
+    const visible = options.latest ? artifacts.filter((artifact, index, all) => index === all.findIndex(other => majorOf(other.version) === majorOf(artifact.version))) : artifacts;
+    if (visible.length) await displayList(visible.map(artifact => ({
       version: artifact.version,
-      status: `${artifact.platform}/${artifact.arch}`,
+      status: `${artifact.platform}/${artifact.arch}${options.latest ? ` · ${t('latest')}` : ''}`,
       plain: `${artifact.version}\t${artifact.platform}/${artifact.arch}`,
     })), { title: `${t('Remote Corretto releases')}${major ? ` ${major}` : ''}`, statuses: true }, options);
-    if (!artifacts.length && !process.exitCode) console.log(t("No verified portable JDKs available for this platform."));
+    if (!visible.length && !process.exitCode) console.log(t("No verified portable JDKs available for this platform."));
   });
 program.command('install <version>').description(t("Install a major’s latest patch or an exact Corretto version"))
   .action(async (version: string) => {

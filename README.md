@@ -1,5 +1,7 @@
 # nova
 
+[![CI](https://github.com/Jaluson/nova/actions/workflows/ci.yml/badge.svg)](https://github.com/Jaluson/nova/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/nova-jdk)](https://www.npmjs.com/package/nova-jdk) [![license](https://img.shields.io/npm/l/nova-jdk)](LICENSE)
+
 Cross-platform JDK version management for the terminal, inspired by nvm. The first release installs verified Amazon Corretto portable JDK archives and works with Bash, Zsh, Fish, PowerShell, and Windows CMD.
 
 [中文文档](README.zh-CN.md) · [npm](https://www.npmjs.com/package/nova-jdk) · [Issues](https://github.com/Jaluson/nova/issues)
@@ -86,8 +88,18 @@ Useful commands:
 | `nova doctor` | Diagnose installation and shell integration |
 | `nova language [language]` | Show or save the interface language |
 | `nova jdk-dir [directory]` | Show or move the downloaded JDK directory |
+| `nova config [key] [value]` | Show or update configuration |
 
 Supported Corretto major versions currently include 8, 11, 17, 21, 25, and 26. The remote index determines which exact releases are available for a platform.
+
+Remote listings can be filtered or consumed by automation:
+
+```sh
+nova ls-remote --latest                 # newest release for every major
+nova ls-remote --platform linux --arch x64
+nova ls-remote 21 --json                # JSON array for scripts
+nova ls --json                          # installed JDKs as JSON
+```
 
 ## Language support
 
@@ -121,6 +133,14 @@ nova jdk-dir /data/nova-jdks
 ```
 
 The configured path is stored in `config.json` as `jdkDir`. Metadata, locks, caches, and shell integration remain under `NOVA_HOME`.
+
+`nova config` provides the same settings from one entry point:
+
+```sh
+nova config
+nova config language zh-CN
+nova config jdk-dir /data/nova-jdks
+```
 
 Nova does not provide installers, JREs, telemetry, automatic upgrades, or a custom mirror in this release. See [SECURITY.md](SECURITY.md) for reporting security issues.
 
