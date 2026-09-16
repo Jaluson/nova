@@ -14,6 +14,7 @@ import { currentJdk, type CurrentJdk } from './current.js';
 import { displayList, type ListOptions, type ListRow } from './list-view.js';
 import { readSettings, saveLanguage } from './settings.js';
 import { localizeCommander } from './command-i18n.js';
+import { latestVersion, updatePackage } from './update.js';
 
 const store = new Store();
 const requestedLanguage = languageFlag(process.argv.slice(2));
@@ -67,6 +68,17 @@ program.command('config [key] [value]').description(t('Show or update nova confi
       console.log(t('JDK directory: {0}', await store.relocateJdks(value))); return;
     }
     throw new Error(t('Unknown configuration key: {0}. Use language or jdk-dir.', key));
+  });
+program.command('update').description(t('Check for and install the latest nova version'))
+  .option('--check', t('Only check whether an update is available'))
+  .action(async (options: { check?: boolean }) => {
+    const info = await latestVersion(pkg.version);
+    if (!info.updateAvailable) { console.log(t('nova is already up to date ({0}).', info.current)); return; }
+    console.log(t('New nova version available: {0} (current {1}).', info.latest, info.current));
+    if (options.check) return;
+    console.log(t('Updating nova globally...'));
+    await updatePackage();
+    console.log(t('nova updated to {0}.', info.latest));
   });
 
 async function active(): Promise<Installation> {

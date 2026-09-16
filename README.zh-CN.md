@@ -53,6 +53,13 @@ nova ls
 
 常用命令包括 `ls-remote`、`install`、`ls`、`use`、`default`、`current`、`pin`、`deactivate`、`uninstall`、`doctor` 和 `language`。支持的 Corretto 主版本目前包括 8、11、17、21、25、26，具体补丁版本由平台远程索引决定。
 
+更新 nova 本身：
+
+```sh
+nova update --check
+nova update
+```
+
 远程列表支持筛选和脚本输出：
 
 ```sh
@@ -68,6 +75,8 @@ nova ls --json                          # 已安装 JDK 的 JSON
 nova config
 nova config language zh-CN
 nova config jdk-dir /data/nova-jdks
+nova update --check       # 检查 nova 更新
+nova update               # 通过 npm 全局更新 nova
 ```
 
 使用 `nova jdk-dir` 查看 JDK 存储目录，传入新目录可以移动所有已下载的 JDK：

@@ -8,6 +8,7 @@ import { readSettings, saveLanguage } from '../src/settings.js';
 import { atomicJson } from '../src/fs-utils.js';
 import { Store } from '../src/store.js';
 import { artifact, cleanup, fakeHome, seed, target, temp } from './helpers.js';
+import { latestVersion } from '../src/update.js';
 
 afterEach(async () => { setLanguage('en'); await cleanup(); });
 const cli = path.resolve('dist/cli.js');
@@ -62,6 +63,9 @@ describe('language resolution and catalogs', () => {
 });
 
 describe('language command and configuration', () => {
+  it('detects a newer npm release without installing it', async () => {
+    await expect(latestVersion('0.1.0', async () => Response.json({ 'dist-tags': { latest: '0.2.0' } }))).resolves.toEqual({ current: '0.1.0', latest: '0.2.0', updateAvailable: true });
+  });
   it('persists the preference across processes and preserves default JDK in both write directions', async () => {
     const store = new Store(await temp());
     await seed(store, '21.0.9.11.1');

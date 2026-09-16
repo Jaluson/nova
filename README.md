@@ -86,9 +86,11 @@ Useful commands:
 | `nova deactivate` | Restore the environment before nova |
 | `nova uninstall <exact-version>` | Remove an installed version |
 | `nova doctor` | Diagnose installation and shell integration |
+| `nova update [--check]` | Check for or install the latest nova release |
 | `nova language [language]` | Show or save the interface language |
 | `nova jdk-dir [directory]` | Show or move the downloaded JDK directory |
 | `nova config [key] [value]` | Show or update configuration |
+| `nova update [--check]` | Check for or install the latest nova release |
 
 Supported Corretto major versions currently include 8, 11, 17, 21, 25, and 26. The remote index determines which exact releases are available for a platform.
 
@@ -99,6 +101,8 @@ nova ls-remote --latest                 # newest release for every major
 nova ls-remote --platform linux --arch x64
 nova ls-remote 21 --json                # JSON array for scripts
 nova ls --json                          # installed JDKs as JSON
+nova update --check                      # check for a newer nova release
+nova update                             # update nova globally via npm
 ```
 
 ## Language support
