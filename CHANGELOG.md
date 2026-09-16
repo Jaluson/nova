@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Harden write-lock recovery, installation record validation, and JDK directory migration rollback.
+- Add `nova doctor --repair-lock` and improve corrupted cache/installation diagnostics.
+
 ## 0.1.8
 
 - Add `nova update` and `nova update --check`.
