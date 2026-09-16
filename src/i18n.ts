@@ -153,6 +153,8 @@ export const zhCN = {
   'Skip the confirmation prompt': '跳过确认提示',
   'Uninstall Corretto {0}? [y/N] ': '确定卸载 Corretto {0}？[y/N] ',
   'Cancelled.': '已取消。',
+  'Stable JAVA_HOME link exists': '稳定 JAVA_HOME 链接存在',
+  'Stable JAVA_HOME link is missing': '稳定 JAVA_HOME 链接缺失',
   'Output JSON for scripts and automation': '输出 JSON，便于脚本和自动化使用',
   'Filter by platform: linux, macos, or windows': '按平台筛选：linux、macos 或 windows',
   'Filter by architecture: x64 or aarch64': '按架构筛选：x64 或 aarch64',

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { getLanguage, languageFlag, parseLanguage, resolveLanguage, setLanguage, systemLanguage, t } from './i18n.js';
 import { Command, InvalidArgumentError, Option } from 'commander';
-import { access, readFile, writeFile } from 'node:fs/promises';
+import { access, readFile, stat, writeFile } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import { constants } from 'node:fs';
 import path from 'node:path';
@@ -249,6 +249,8 @@ program.command('doctor').description(t("Check Shell integration and Java enviro
   const report = (ok: boolean, message: string) => { console.log(t("{0}  {1}", ok ? t('OK') : t('FAIL'), message)); if (!ok) failures++; };
   report(Boolean(process.env.NOVA_SHELL), t("Shell integration: {0}", process.env.NOVA_SHELL ?? t('not initialized')));
   console.log(t("NOVA_HOME: {0}", store.root));
+  try { await stat(stableHome(store.root, hostTarget())); report(true, t('Stable JAVA_HOME link exists')); }
+  catch { report(false, t('Stable JAVA_HOME link is missing')); }
   try {
     const list = await store.list(hostTarget());
     for (const item of list) { try { await store.check(item); report(true, t("Installed {0}", item.version)); } catch (error) { report(false, String(error)); } }
