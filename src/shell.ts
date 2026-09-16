@@ -15,13 +15,13 @@ function environment(env: NodeJS.ProcessEnv, name: string): string | undefined {
   const key = process.platform === 'win32' ? Object.keys(env).find(k => k.toLowerCase() === name.toLowerCase()) : name;
   return key ? env[key] : undefined;
 }
-export function activation(item: Installation, env: NodeJS.ProcessEnv = process.env): Changes {
+export function activation(item: Installation, env: NodeJS.ProcessEnv = process.env, home = item.javaHome): Changes {
   const delimiter = item.platform === 'windows' ? ';' : ':';
-  const bin = path.join(item.javaHome, 'bin');
+  const bin = path.join(home, 'bin');
   const currentPath = environment(env, 'PATH') ?? '';
   const equal = (a: string, b: string) => item.platform === 'windows' ? a.toLowerCase() === b.toLowerCase() : a === b;
   const parts = currentPath.split(delimiter).filter(p => !equal(p, env.NOVA_BIN ?? '\0') && !equal(p, bin));
-  const changes: Changes = { JAVA_HOME: item.javaHome, PATH: [bin, ...parts].join(delimiter), NOVA_BIN: bin, NOVA_ACTIVE: item.id };
+  const changes: Changes = { JAVA_HOME: home, PATH: [bin, ...parts].join(delimiter), NOVA_BIN: bin, NOVA_ACTIVE: item.id };
   if (!env.NOVA_ACTIVE) {
     const original = environment(env, 'JAVA_HOME');
     changes.NOVA_ORIGINAL_JAVA_HOME_SET = original === undefined ? '0' : '1';

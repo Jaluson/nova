@@ -4,7 +4,7 @@ import { Command, InvalidArgumentError, Option } from 'commander';
 import { access, readFile, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import path from 'node:path';
-import { Store, pinVersion, projectVersion } from './store.js';
+import { stableHome, Store, pinVersion, projectVersion } from './store.js';
 import { CorrettoProvider } from './provider.js';
 import { MAJORS, compareVersions, majorOf, normalizeVersion } from './versions.js';
 import { hostTarget, sameTarget, type Installation } from './types.js';
@@ -51,7 +51,9 @@ async function active(): Promise<Installation> {
   const item = (await store.list(hostTarget())).find(i => i.id === process.env.NOVA_ACTIVE);
   if (!item) throw new Error(t("No nova JDK active in this terminal. Initialize your shell and run nova use <version>."));
   await store.check(item);
-  if (process.env.JAVA_HOME !== item.javaHome) throw new Error(t("JAVA_HOME was changed outside nova. Run nova use <version> to restore it."));
+  const configured = process.env.JAVA_HOME;
+  const stable = stableHome(store.root, hostTarget());
+  if (configured !== item.javaHome && configured !== stable) throw new Error(t("JAVA_HOME was changed outside nova. Run nova use <version> to restore it."));
   return item;
 }
 async function envChanges(action: string, version?: string): Promise<Changes> {
@@ -63,10 +65,12 @@ async function envChanges(action: string, version?: string): Promise<Changes> {
     if (version) throw new Error(t("Internal default initialization takes no version."));
     if (process.env.NOVA_ACTIVE) return {};
     const selected = await store.defaultInstallation(hostTarget());
-    return selected ? activation(selected) : {};
+    return selected ? activation(selected, process.env, await store.activate(selected, hostTarget())) : {};
   }
   if (action !== 'use') throw new Error(t("Unknown environment action: {0}", action));
-  return activation(await store.resolve(version ?? await projectVersion(), hostTarget()));
+  const target = hostTarget();
+  const selected = await store.resolve(version ?? await projectVersion(), target);
+  return activation(selected, process.env, await store.activate(selected, target));
 }
 
 function positiveInteger(value: string): number {
@@ -186,7 +190,7 @@ program.command('doctor').description(t("Check Shell integration and Java enviro
       const candidate = path.resolve(entry || '.', executable);
       try { await access(candidate, process.platform === 'win32' ? constants.F_OK : constants.X_OK); found = candidate; break; } catch { /* Try the next PATH entry. */ }
     }
-    const expected = path.join(item.javaHome, 'bin', executable);
+    const expected = path.join(stableHome(store.root, hostTarget()), 'bin', executable);
     report(process.platform === 'win32' ? found?.toLowerCase() === expected.toLowerCase() : found === expected, t("PATH java: {0}", found ?? t('not found')));
   } catch (error) { report(false, String(error)); }
   if (failures) process.exitCode = 1;

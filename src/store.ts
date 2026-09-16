@@ -1,6 +1,6 @@
 import { t } from './i18n.js';
 import { createWriteStream } from 'node:fs';
-import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -18,6 +18,9 @@ export function novaRoot(): string {
 }
 export function installationId(artifact: Artifact): string {
   return `corretto-${normalizeVersion(artifact.version)}-${artifact.platform}-${artifact.arch}`;
+}
+export function stableHome(root: string, target: Target): string {
+  return path.join(root, 'current', `${target.platform}-${target.arch}`);
 }
 export class Store {
   constructor(readonly root: string = novaRoot()) {}
@@ -42,6 +45,16 @@ export class Store {
     if (!result) throw new Error(t("Corretto {0} is not installed. Run nova install {1}.", selector, selector));
     await this.check(result);
     return result;
+  }
+  /** Point the stable JAVA_HOME entry at an installed JDK. */
+  async activate(installation: Installation, target: Target): Promise<string> {
+    return withLock(this.root, async () => {
+      const link = stableHome(this.root, target);
+      await mkdir(path.dirname(link), { recursive: true });
+      await rm(link, { recursive: true, force: true });
+      await symlink(installation.javaHome, link, process.platform === 'win32' ? 'junction' : 'dir');
+      return link;
+    });
   }
   async check(installation: Installation): Promise<void> {
     const suffix = installation.platform === 'windows' ? '.exe' : '';

@@ -31,7 +31,13 @@ npm install --global .
 
 ## 快速开始
 
-先按照 [English README](README.md) 中的 Shell 集成说明初始化当前终端，然后运行：
+先按照 [English README](README.md) 中的 Shell 集成说明初始化当前终端。`JAVA_HOME` 和 JDK 的 `bin` 目录会固定指向 `NOVA_HOME/current` 下的稳定路径；切换版本时只更新软链接（Windows 使用 junction）：
+
+```text
+~/.nova/current/linux-x64 -> ~/.nova/jdks/<版本>/jdk
+```
+
+然后运行：
 
 ```sh
 nova ls-remote 21
@@ -63,7 +69,7 @@ nova --lang en ls          # 仅本次使用英文
 
 交互式 `ls` 和 `ls-remote` 使用紧凑分页；使用 `--all` 查看完整列表，使用 `--page` 输出指定页，使用 `--verbose` 显示路径。输出到管道时不会插入终端控制符。
 
-如果 `JAVA_HOME` 已经指向有效 JDK，`nova ls` 会将其显示为外部 JDK，不会导入、移动或删除它。nova 只管理自己安装的 Corretto。
+如果 `JAVA_HOME` 已经指向有效 JDK，`nova ls` 会将其显示为外部 JDK，不会导入、移动或删除它。首次激活 nova 时会记住原值，`nova deactivate` 可以恢复。nova 只管理自己安装的 Corretto。
 
 ## 开发与贡献
 

@@ -31,7 +31,7 @@ npm install --global .
 
 ## Shell integration
 
-`nova use` changes the environment of the current shell through a small wrapper. Add the matching command to your shell profile and run it once in the current terminal:
+`nova use` keeps `JAVA_HOME` and the JDK `bin` directory pointed at a stable path under `NOVA_HOME/current`. Switching versions updates a directory symlink (or a Windows junction), so environment variables do not change on every switch. Add the matching command to your shell profile and run it once in the current terminal:
 
 ```sh
 # Bash
@@ -106,7 +106,7 @@ Language precedence is `--lang`, `NOVA_LANG`, saved preference, then the system 
 
 Interactive `ls` and `ls-remote` use compact pages. Use `--all` for a complete list, `--page` for a static page, and `--verbose` to include paths. A pipe receives plain output without terminal controls.
 
-If `JAVA_HOME` already points to a valid JDK, `nova ls` shows it as an external JDK without importing, moving, or deleting it. Nova manages only its own Corretto installations.
+If `JAVA_HOME` already points to a valid JDK, `nova ls` shows it as an external JDK without importing, moving, or deleting it. The first nova activation remembers that value, and `nova deactivate` restores it. Nova manages only its own Corretto installations.
 
 ## Data and security
 

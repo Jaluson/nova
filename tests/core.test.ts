@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import path from 'node:path';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, realpath, writeFile } from 'node:fs/promises';
 import { compareVersions, normalizeVersion, selectVersion } from '../src/versions.js';
 import { CorrettoProvider, parseRelease, type Release } from '../src/provider.js';
 import { atomicJson, withLock } from '../src/fs-utils.js';
-import { Store, pinVersion, projectVersion } from '../src/store.js';
+import { stableHome, Store, pinVersion, projectVersion } from '../src/store.js';
 import { safeArchivePath, safeLink } from '../src/archive.js';
 import { officialDownload } from '../src/network.js';
 import { archive, artifact, cleanup, seed, target, temp } from './helpers.js';
@@ -63,6 +63,15 @@ describe('Corretto provider', () => {
 });
 
 describe('storage and installation', () => {
+  it('switches a stable current link without changing installation paths', async () => {
+    const store = new Store(await temp());
+    await seed(store, '17.0.17.10.1');
+    const item = await store.resolve('17', target);
+    const link = await store.activate(item, target);
+    expect(link).toBe(stableHome(store.root, target));
+    expect(await realpath(link)).toBe(await realpath(item.javaHome));
+    expect(item.javaHome).not.toBe(link);
+  });
   it.each(['tar.gz', 'zip'] as const)('installs %s after checksum verification and reuses an installation', async format => {
     const { item, bytes } = await archive(format);
     const store = new Store(await temp());
