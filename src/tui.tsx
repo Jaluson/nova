@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Text, useApp, useInput, useStdout } from 'ink';
 import Spinner from 'ink-spinner';
+import TextInput from 'ink-text-input';
 import { render } from 'ink';
 import type { ListLayout, ListOptions, ListRow } from './list-view.js';
 import { t } from './i18n.js';
@@ -48,13 +49,8 @@ function App({ rows, layout, options, actions }: Props) {
     if (help) { if (key.escape || input === '?' || input === 'q') setHelp(false); return; }
     if (input === 'q' || key.escape) { exit(); return; }
     if (input === '?') { setHelp(true); return; }
-    if (input === '/') { setSearchMode(true); setMessage(t('Type to search, Enter to apply, Esc to clear')); return; }
-    if (searchMode) {
-      if (key.backspace || key.delete) setQuery(value => value.slice(0, -1));
-      else if (!key.return && !key.escape && input.length === 1) setQuery(value => value + input);
-      if (key.return || key.escape) { setSearchMode(false); setMessage(''); }
-      return;
-    }
+    if (input === '/') { setSearchMode(true); setMessage(''); return; }
+    if (searchMode) { if (key.escape) { setSearchMode(false); setQuery(''); setMessage(''); } return; }
     if (key.upArrow || input === 'k') setSelected(value => Math.max(0, value - 1));
     else if (key.downArrow || input === 'j') setSelected(value => Math.min(filtered.length - 1, value + 1));
     else if (key.pageUp) setSelected(value => Math.max(0, value - 10));
@@ -70,7 +66,7 @@ function App({ rows, layout, options, actions }: Props) {
   if (help) return <Box flexDirection="column" borderStyle="round" borderColor="cyan" paddingX={1}><Text color="cyan" bold>{t('Nova keyboard help')}</Text><Text>↑/↓ j/k  {t('select')}   Enter/u {t('use/install')}</Text><Text>i {t('install')}   d {t('set default')}   x {t('uninstall')}</Text><Text>/ {t('search')}   {actions?.refresh ? `r ${t('refresh')}   ` : ''}q {t('quit')}</Text><Text dimColor>{t('Press ? or Esc to close')}</Text></Box>;
   return <Box flexDirection="column" paddingX={1}>
     <Text color="cyan" bold>{layout.title} ({filtered.length}/{rows.length})</Text>
-    <Text dimColor>{query ? `${t('Search')}: ${query}` : t('Press / to search, ? for help')}</Text>
+    {searchMode ? <Box><Text color="cyan">{t('Search')}: </Text><TextInput value={query} onChange={setQuery} onSubmit={() => { setSearchMode(false); setMessage(''); }} /></Box> : <Text dimColor>{query ? `${t('Search')}: ${query}` : t('Press / to search, ? for help')}</Text>}
     <Box marginTop={1} flexDirection="column">
       <Text bold>{t('VERSION')}{layout.statuses ? `  ${t('STATUS')}` : ''}{options.verbose ? `  ${t('PATH')}` : ''}</Text>
       {viewportStart > 0 && <Text dimColor>  ⋮ {viewportStart} {t('more above')}</Text>}
