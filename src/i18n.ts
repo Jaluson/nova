@@ -140,6 +140,7 @@ export const zhCN = {
   'Show the JDK selected by JAVA_HOME': '显示 JAVA_HOME 当前选择的 JDK',
   'Run nova <command> --help for command-specific options.': '运行 nova <命令> --help 查看命令专属选项。',
   'nova use changes the stable JAVA_HOME link; nova deactivate restores the previous JAVA_HOME.': 'nova use 会切换稳定的 JAVA_HOME 链接；nova deactivate 会恢复之前的 JAVA_HOME。',
+  'Remote Corretto releases': '远程 Corretto 版本',
   'Usage:': '用法：',
   'Arguments:': '参数：',
   'Options:': '选项：',

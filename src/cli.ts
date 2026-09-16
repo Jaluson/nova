@@ -103,8 +103,11 @@ listOptions(program.command('ls-remote [major]').description(t("Browse verified 
       if (result.status === 'fulfilled') return result.value;
       console.error(t("Corretto {0}: {1}", majors[i], String(result.reason))); process.exitCode = 1; return [];
     }).filter(a => sameTarget(a, target)).sort((a, b) => compareVersions(b.version, a.version));
-    if (artifacts.length) await displayList(artifacts.map(artifact => ({ version: artifact.version, plain: `${artifact.version}\t${artifact.platform}/${artifact.arch}` })),
-      { title: `Amazon Corretto${major ? ` ${major}` : ''} | ${target.platform}/${target.arch}` }, options);
+    if (artifacts.length) await displayList(artifacts.map(artifact => ({
+      version: artifact.version,
+      status: `${artifact.platform}/${artifact.arch}`,
+      plain: `${artifact.version}\t${artifact.platform}/${artifact.arch}`,
+    })), { title: `${t('Remote Corretto releases')}${major ? ` ${major}` : ''}`, statuses: true }, options);
     if (!artifacts.length && !process.exitCode) console.log(t("No verified portable JDKs available for this platform."));
   });
 program.command('install <version>').description(t("Install a major’s latest patch or an exact Corretto version"))

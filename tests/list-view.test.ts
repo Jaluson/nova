@@ -75,6 +75,13 @@ describe('list CLI output modes', () => {
     expect(filtered.stdout).not.toContain('26.0.');
     expect(run(['ls-remote', '21', '--page', '99'], root).stderr).toContain('out of range');
   });
+  it('shows platform and architecture beside remote versions in the terminal table', () => {
+    const output = renderPage([{ version: '21.0.9.1.1', status: 'linux/x64', plain: '21.0.9.1.1\tlinux/x64' }],
+      { title: 'Remote Corretto releases', statuses: true }, {}, 1, 20, 80, false);
+    expect(output).toContain('VERSION');
+    expect(output).toContain('STATUS');
+    expect(output).toContain('linux/x64');
+  });
   it('keeps a default local version on page one and supports full paths with --all', async () => {
     const store = new Store(await temp());
     for (const version of ['17.0.1.1.1', '21.0.1.1.1', '25.0.1.1.1']) await seed(store, version);
