@@ -65,8 +65,8 @@ nova update
 ```sh
 nova ls-remote --latest                 # 每个主版本只显示最新版本
 nova ls-remote --platform linux --arch x64
-nova ls-remote 21 --json                # 输出 JSON 数组
-nova ls --json                          # 已安装 JDK 的 JSON
+nova ls-remote 21 --json                # 输出带 schema 的 JSON
+nova ls --json                          # 已安装 JDK 的带 schema JSON
 ```
 
 也可以使用统一配置入口：

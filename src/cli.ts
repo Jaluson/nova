@@ -143,11 +143,12 @@ listOptions(program.command('ls-remote [major]').description(t("Browse verified 
       console.error(t("Corretto {0}: {1}", majors[i], String(result.reason))); process.exitCode = 1; return [];
     }).filter(a => sameTarget(a, target)).sort((a, b) => compareVersions(b.version, a.version));
     const visible = options.latest ? artifacts.filter((artifact, index, all) => index === all.findIndex(other => majorOf(other.version) === majorOf(artifact.version))) : artifacts;
+    const latestByMajor = new Set(artifacts.filter((a, i, all) => i === all.findIndex(b => majorOf(b.version) === majorOf(a.version))).map(a => a.version));
     if (visible.length) await displayList(visible.map(artifact => ({
       version: artifact.version,
-      status: `${artifact.platform}/${artifact.arch}${options.latest ? ` · ${t('latest')}` : ''}`,
+      status: `${artifact.platform}/${artifact.arch}${latestByMajor.has(artifact.version) ? ` · ${t('latest')}` : ''}`,
       plain: `${artifact.version}\t${artifact.platform}/${artifact.arch}`,
-    })), { title: `${t('Remote Corretto releases')}${major ? ` ${major}` : ''}`, statuses: true }, options);
+    })), { title: `${t('Remote Corretto releases')}${major ? ` ${major}` : ''}`, statuses: true }, { ...options, jsonData: options.json ? { schema: 1, command: 'ls-remote', platform: target.platform, arch: target.arch, items: visible.map(a => ({ version: a.version, platform: a.platform, arch: a.arch, latest: latestByMajor.has(a.version) })) } : undefined });
     if (!visible.length && !process.exitCode) console.log(t("No verified portable JDKs available for this platform."));
   });
 program.command('install <version>').description(t("Install a major’s latest patch or an exact Corretto version"))
@@ -185,7 +186,7 @@ listOptions(program.command('ls').description(t("Browse managed JDKs and the cur
   });
   if (current && !current.installation) rows.push({ version: current.version, status: `${t('current')}, ${t('external')} (${current.vendor})`, detail: current.javaHome, priority: 2,
     plain: `${current.version}  ${t('current')}  ${t('external')} (${current.vendor})\t${current.javaHome}` });
-  if (rows.length) await displayList(rows, { title: t('Installed JDKs'), statuses: true }, options);
+  if (rows.length) await displayList(rows, { title: t('Installed JDKs'), statuses: true }, { ...options, jsonData: options.json ? { schema: 1, command: 'ls', items: rows.map(r => ({ version: r.version, status: r.status ?? '', path: r.detail ?? '', current: r.status?.includes(t('current')) ?? false, default: r.status?.includes(t('default')) ?? false, external: r.status?.includes(t('external')) ?? false })) } : undefined });
   if (!installed.length && !current) console.log(t("No nova-managed JDKs installed. Run nova install 21."));
 });
 program.command('use [version]').description(t("Activate an installed JDK in this terminal; defaults to .novarc"))

@@ -86,7 +86,6 @@ Useful commands:
 | `nova deactivate` | Restore the environment before nova |
 | `nova uninstall <exact-version>` | Remove an installed version |
 | `nova doctor` | Diagnose installation and shell integration |
-| `nova update [--check]` | Check for or install the latest nova release |
 | `nova language [language]` | Show or save the interface language |
 | `nova jdk-dir [directory]` | Show or move the downloaded JDK directory |
 | `nova config [key] [value]` | Show or update configuration |
@@ -99,8 +98,8 @@ Remote listings can be filtered or consumed by automation:
 ```sh
 nova ls-remote --latest                 # newest release for every major
 nova ls-remote --platform linux --arch x64
-nova ls-remote 21 --json                # JSON array for scripts
-nova ls --json                          # installed JDKs as JSON
+nova ls-remote 21 --json                # versioned JSON for scripts
+nova ls --json                          # installed JDKs as versioned JSON
 nova update --check                      # check for a newer nova release
 nova update                             # update nova globally via npm
 ```
