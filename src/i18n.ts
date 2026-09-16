@@ -1,0 +1,178 @@
+export const zhCN = {
+  '\rDownloaded {0} MiB{1}': '\r已下载 {0} MiB{1}',
+  '.novarc must contain one exact Corretto version.': '.novarc 必须包含一个完整的 Corretto 版本号。',
+  'Activate an installed JDK in this terminal; defaults to .novarc': '在当前终端启用已安装的 JDK；默认读取 .novarc',
+  'Already installed: {0}': '已安装：{0}',
+  'Another nova write is in progress. If no nova process is running, remove {0} and retry.': '另一个 nova 写操作正在进行。确认没有 nova 进程运行后，可删除 {0} 并重试。',
+  'Archive does not contain a usable JDK (java and javac required).': '压缩包中没有可用的 JDK（需要 java 和 javac）。',
+  'Archive is not an Amazon Corretto JDK.': '压缩包不是 Amazon Corretto JDK。',
+  'Browse managed JDKs and the current JAVA_HOME JDK': '浏览已管理的 JDK 和当前 JAVA_HOME 指向的 JDK',
+  'Browse verified remote versions for this platform': '浏览适用于当前平台的已验证远程版本',
+  'CMD initialization is only available on Windows.': 'CMD 初始化仅适用于 Windows。',
+  'CMD paths and environment values cannot contain double quotes.': 'CMD 路径和环境变量值不能包含双引号。',
+  'Cannot determine the Java version': '无法识别 Java 版本',
+  'Cannot inspect JAVA_HOME ({0}): {1}': '无法检查 JAVA_HOME（{0}）：{1}',
+  'Cannot read {0}: {1}': '无法读取 {0}：{1}',
+  'Cannot uninstall the current JDK. Run nova deactivate or nova use first.': '不能卸载当前 JDK，请先执行 nova deactivate 或 nova use。',
+  'Cannot uninstall the default JDK. Select another default first.': '不能卸载默认 JDK，请先设置另一个默认版本。',
+  'Check Shell integration and Java environment': '检查 Shell 集成和 Java 环境',
+  'Corretto {0} is not installed.': '尚未安装 Corretto {0}。',
+  'Corretto {0} is not installed. Run nova install {1}.': '尚未安装 Corretto {0}，请执行 nova install {1}。',
+  'Corretto {0}: {1}': 'Corretto {0}：{1}',
+  'Default JDK is missing or incompatible. Run nova default <installed-version>.': '默认 JDK 不存在或不兼容，请执行 nova default <installed-version>。',
+  'Default: Corretto {0}': '默认版本：Corretto {0}',
+  'Default: {0}': '默认版本：{0}',
+  'Download failed: HTTP {0}': '下载失败：HTTP {0}',
+  'Download redirect has no location.': '下载重定向缺少目标地址。',
+  'Duplicate ZIP entry: {0}': 'ZIP 中存在重复条目：{0}',
+  'Duplicate archive entry: {0}': '压缩包中存在重复条目：{0}',
+  'Emit Shell initialization code (CMD: emit an initialization script path)': '输出 Shell 初始化代码（CMD 输出初始化脚本路径）',
+  'Expected a positive integer.': '请输入正整数。',
+  'GitHub API HTTP {0}{1}': 'GitHub API 返回 HTTP {0}{1}',
+  'Include installation paths in the terminal view': '在终端列表中显示安装路径',
+  'Install a major’s latest patch or an exact Corretto version': '安装主版本的最新补丁或指定完整 Corretto 版本',
+  'Installation {0} is incomplete. Reinstall it.': '{0} 的安装不完整，请重新安装。',
+  'Installed Corretto {0}\nRun nova use {1} to activate it.': '已安装 Corretto {0}\n执行 nova use {1} 即可启用。',
+  'Installed {0}': '已安装 {0}',
+  'Installing Corretto {0} ({1}/{2})': '正在安装 Corretto {0}（{1}/{2}）',
+  'Internal default initialization takes no version.': '内部默认初始化命令不接受版本参数。',
+  'Interrupted': '已中断',
+  'Invalid GitHub release record.': 'GitHub 发布记录无效。',
+  'Invalid GitHub release response.': 'GitHub 发布接口返回的数据无效。',
+  'Invalid JDK executable: {0}': 'JDK 可执行文件无效：{0}',
+  'Invalid environment variable name.': '环境变量名称无效。',
+  'Invalid installation record: {0}': '安装记录无效：{0}',
+  'Invalid version: {0}': '版本号无效：{0}',
+  'JAVA_HOME is not set. Configure it or run nova use <version>.': '尚未设置 JAVA_HOME，请配置它或执行 nova use <version>。',
+  'JAVA_HOME was changed outside nova. Run nova use <version> to restore it.': 'JAVA_HOME 已在 nova 之外被修改，请执行 nova use <version> 恢复。',
+  'JAVA_HOME: {0}': 'JAVA_HOME：{0}',
+  'JDK architecture does not match download metadata.': 'JDK 架构与下载元数据不一致。',
+  'JDK executable escapes installation directory.': 'JDK 可执行文件超出了安装目录。',
+  'JDK operating system does not match download metadata.': 'JDK 操作系统与下载元数据不一致。',
+  'JDK release version does not match requested major.': 'JDK 发行版本与请求的主版本不一致。',
+  'Manage Amazon Corretto portable JDKs': '管理 Amazon Corretto 便携版 JDK',
+  'NOVA_HOME: {0}': 'NOVA_HOME：{0}',
+  'No .novarc found. Specify a version or run nova pin <version>.': '未找到 .novarc，请指定版本或执行 nova pin <version>。',
+  'No nova JDK active in this terminal. Initialize your shell and run nova use <version>.': '当前终端未启用 nova 管理的 JDK，请初始化 Shell 并执行 nova use <version>。',
+  'No nova-managed JDKs installed. Run nova install 21.': '尚未安装 nova 管理的 JDK，请执行 nova install 21。',
+  'No verified Corretto {0} archive for {1}/{2}. Run nova ls-remote {3}.': '没有适用于 {1}/{2} 的已验证 Corretto {0} 压缩包，请执行 nova ls-remote {3}。',
+  'No verified portable JDKs available for this platform.': '当前平台没有可用的已验证便携版 JDK。',
+  'No verified portable JDKs found for Corretto {0}.': '没有找到 Corretto {0} 的已验证便携版 JDK。',
+  'Not a file': '不是文件',
+  'PATH java: {0}': 'PATH 中的 java：{0}',
+  'Page {0} is out of range (1-{1}).': '页码 {0} 超出范围（1-{1}）。',
+  'Pinned Corretto {0} in {1}': '已在 {1} 中固定 Corretto {0}',
+  'Print one page without interactive browsing': '输出指定页，不进入交互式浏览',
+  'Print the JAVA_HOME JDK version, including external JDKs': '输出 JAVA_HOME 指向的 JDK 版本，支持外部 JDK',
+  'Print the full list without paging': '输出完整列表，不分页',
+  'Refresh the release cache': '刷新远程版本缓存',
+  'Remove an installed JDK (except current/default)': '卸载已安装的 JDK（当前和默认版本除外）',
+  'Restore this terminal’s previous Java environment': '恢复当前终端原来的 Java 环境',
+  'SHA-256 mismatch. Installation cancelled.': 'SHA-256 校验不一致，已取消安装。',
+  'Set the JDK for newly initialized terminals': '设置新初始化终端的默认 JDK',
+  'Shell environment values cannot contain NUL or newlines.': 'Shell 环境变量值不能包含 NUL 或换行符。',
+  'Shell integration required. Run nova init <bash|zsh|fish|powershell|cmd> and follow the README setup instructions.': '需要先配置 Shell 集成，请执行 nova init <bash|zsh|fish|powershell|cmd> 并按 README 完成设置。',
+  'Shell integration required. See nova init --help and the README.': '需要先配置 Shell 集成，请查看 nova init --help 和 README。',
+  'Shell integration: {0}': 'Shell 集成：{0}',
+  'Supported major versions: {0}': '支持的主版本：{0}',
+  'Supported shells: {0}': '支持的 Shell：{0}',
+  'Terminated': '已终止',
+  'Too many download redirects.': '下载重定向次数过多。',
+  'Uninstalled Corretto {0}': '已卸载 Corretto {0}',
+  'Unknown environment action: {0}': '未知的环境操作：{0}',
+  'Unsafe archive link: {0}': '压缩包链接不安全：{0}',
+  'Unsafe archive path: {0}': '压缩包路径不安全：{0}',
+  'Unsupported ZIP link or special file: {0}': '不支持的 ZIP 链接或特殊文件：{0}',
+  'Unsupported archive entry: {0}': '不支持的压缩包条目：{0}',
+  'Unsupported platform: {0}/{1}': '不支持的平台：{0}/{1}',
+  'Untrusted Corretto download URL: {0}': '不可信的 Corretto 下载地址：{0}',
+  'Versions per page (default: 20, limited by terminal height)': '每页版本数（默认 20，受终端高度限制）',
+  'Warning: could not save release cache.': '警告：无法保存远程版本缓存。',
+  'Warning: using cached Corretto {0} metadata from {1}; {2}': '警告：正在使用 {1} 缓存的 Corretto {0} 元数据；{2}',
+  'Warning: {0}': '警告：{0}',
+  'Write an exact installed version to .novarc in the current directory': '将已安装的完整版本写入当前目录的 .novarc',
+  'deactivate takes no version.': 'deactivate 不接受版本参数。',
+  'ls-remote accepts a major version, for example 21.': 'ls-remote 只接受主版本，例如 21。',
+  'nova v1 requires glibc on Linux; musl/Alpine is not supported.': 'nova 首版在 Linux 上需要 glibc，不支持 musl/Alpine。',
+  'nova: {0}': 'nova：{0}',
+  'uninstall requires an exact version from nova ls.': 'uninstall 需要 nova ls 中的完整版本号。',
+  '{0}  {1}': '{0}  {1}',
+  '{0} is not a file': '{0} 不是文件',
+  'current': '当前',
+  'default': '默认',
+  'external': '外部',
+  'Installed JDKs': '已安装的 JDK',
+  'VERSION': '版本',
+  'STATUS': '状态',
+  'PATH': '路径',
+  '{0}-{1} / {2}  |  Page {3}/{4}': '{0}-{1} / {2}  |  第 {3}/{4} 页',
+  'q: quit  |  n/p or arrows: page  |  Home/End': 'q：退出  |  n/p 或方向键：翻页  |  Home/End',
+  'Use --page <n> to navigate, or --all for the full list.': '使用 --page <n> 翻页，或 --all 查看完整列表。',
+  'Full paths: --all': '完整路径：--all',
+  'unknown vendor': '未知发行商',
+  'OK': '通过',
+  'FAIL': '失败',
+  'not initialized': '未初始化',
+  'not set': '未设置',
+  'not found': '未找到',
+  '; rate limit may be exhausted. Set GITHUB_TOKEN or retry later': '；可能已达到请求限额，请设置 GITHUB_TOKEN 或稍后重试',
+  'Use the matching shell name; add initialization to your shell profile for new terminals.': '请使用对应的 Shell 名称，并将初始化语句加入 Shell 配置文件，使新终端自动加载。',
+  'nova requires CMD delayed expansion disabled. Start cmd /V:OFF.': 'nova 需要关闭 CMD 延迟展开，请使用 cmd /V:OFF 启动。',
+  'Language for this command: en, zh-CN, or auto': '本次命令的语言：en、zh-CN 或 auto',
+  'Show or save language preference (en, zh-CN, auto)': '查看或保存语言偏好（en、zh-CN、auto）',
+  'Unsupported language: {0}. Choose en, zh-CN, or auto.': '不支持的语言：{0}，请选择 en、zh-CN 或 auto。',
+  'Language: {0} (preference: {1})': '当前语言：{0}（保存的偏好：{1}）',
+  'Language preference saved: {0}. Effective language: {1}.': '已保存语言偏好：{0}。当前生效语言：{1}。',
+  'Usage:': '用法：',
+  'Arguments:': '参数：',
+  'Options:': '选项：',
+  'Global Options:': '全局选项：',
+  'Commands:': '命令：',
+  'display help for command': '显示命令帮助',
+  'output the version number': '输出版本号',
+  'error: missing required argument \'{0}\'': '错误：缺少必需参数「{0}」',
+  'error: option \'{0}\' argument missing': '错误：选项「{0}」缺少参数值',
+  'error: unknown option \'{0}\'': '错误：未知选项「{0}」',
+  'error: unknown command \'{0}\'': '错误：未知命令「{0}」',
+  'error: option \'{0}\' cannot be used with option \'{1}\'': '错误：选项「{0}」不能与「{1}」同时使用',
+  'error: option \'{0}\' argument \'{1}\' is invalid.': '错误：选项「{0}」的参数值「{1}」无效。',
+  'error: too many arguments{0}. Expected {1} argument(s) but got {2}.': '错误：参数过多{0}，需要 {1} 个，实际收到 {2} 个。',
+  ' for \'{0}\'': '（命令「{0}」）',
+} as const;
+
+export type Message = keyof typeof zhCN;
+export type Language = 'en' | 'zh-CN';
+export type LanguagePreference = Language | 'auto';
+let language: Language = 'en';
+export function setLanguage(value: Language): void { language = value; }
+export function getLanguage(): Language { return language; }
+export function t(message: Message, ...args: unknown[]): string {
+  const template = language === 'zh-CN' ? zhCN[message] : message;
+  return template.replace(/\{(\d+)\}/g, (_, index: string) => String(args[Number(index)] ?? `{${index}}`));
+}
+export function parseLanguage(value: string): LanguagePreference {
+  const normalized = value.trim().toLowerCase().replaceAll('_', '-');
+  if (normalized === 'auto') return 'auto';
+  if (normalized === 'en' || normalized.startsWith('en-')) return 'en';
+  if (normalized === 'zh' || normalized.startsWith('zh-')) return 'zh-CN';
+  throw new Error(t('Unsupported language: {0}. Choose en, zh-CN, or auto.', value));
+}
+export function systemLanguage(env: NodeJS.ProcessEnv = process.env, locale = Intl.DateTimeFormat().resolvedOptions().locale): Language {
+  const selected = env.LC_ALL || env.LC_MESSAGES || env.LANG || locale;
+  return /^zh(?:[-_.@]|$)/i.test(selected) ? 'zh-CN' : 'en';
+}
+export function resolveLanguage(flag: string | undefined, saved: string | undefined, env: NodeJS.ProcessEnv = process.env): Language {
+  const preference = flag ?? (env.NOVA_LANG || undefined) ?? saved ?? 'auto';
+  const parsed = parseLanguage(preference);
+  return parsed === 'auto' ? systemLanguage(env) : parsed;
+}
+/** Resolve before building Commander, so help and argument errors use the same locale. */
+export function languageFlag(args: string[]): string | undefined {
+  let value: string | undefined;
+  for (let i = 0; i < args.length && args[i] !== '--'; i++) {
+    const arg = args[i]!;
+    if (arg.startsWith('--lang=')) value = arg.slice('--lang='.length);
+    else if (arg === '--lang' && args[i + 1] && !args[i + 1]!.startsWith('-')) value = args[++i];
+  }
+  return value;
+}

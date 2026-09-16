@@ -1,0 +1,133 @@
+import { t } from './i18n.js';
+import { createWriteStream } from 'node:fs';
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { homedir } from 'node:os';
+import path from 'node:path';
+import { Readable, Transform } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { extractArchive, findJavaHome, validateRelease } from './archive.js';
+import { atomicJson, isMissing, readJson, withLock } from './fs-utils.js';
+import { cancellation, fetchDownload } from './network.js';
+import { normalizeVersion, selectVersion } from './versions.js';
+import { sameTarget, type Artifact, type Installation, type Target } from './types.js';
+import { readSettings } from './settings.js';
+
+export function novaRoot(): string {
+  return path.resolve(process.env.NOVA_HOME || path.join(homedir(), '.nova'));
+}
+export function installationId(artifact: Artifact): string {
+  return `corretto-${normalizeVersion(artifact.version)}-${artifact.platform}-${artifact.arch}`;
+}
+export class Store {
+  constructor(readonly root: string = novaRoot()) {}
+  async list(target?: Target): Promise<Installation[]> {
+    const directory = path.join(this.root, 'jdks');
+    let entries;
+    try { entries = await readdir(directory, { withFileTypes: true }); }
+    catch (error) { if (isMissing(error)) return []; throw error; }
+    const installs: Installation[] = [];
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const record = await readJson<Installation>(path.join(directory, entry.name, 'nova.json'));
+      if (!record) continue;
+      const installRoot = path.join(directory, entry.name);
+      if (record.id !== entry.name || installationId(record) !== entry.name || !path.resolve(record.javaHome).startsWith(installRoot + path.sep)) throw new Error(t("Invalid installation record: {0}", entry.name));
+      if (!target || sameTarget(record, target)) installs.push(record);
+    }
+    return installs;
+  }
+  async resolve(selector: string, target: Target): Promise<Installation> {
+    const result = selectVersion(await this.list(target), selector);
+    if (!result) throw new Error(t("Corretto {0} is not installed. Run nova install {1}.", selector, selector));
+    await this.check(result);
+    return result;
+  }
+  async check(installation: Installation): Promise<void> {
+    const suffix = installation.platform === 'windows' ? '.exe' : '';
+    for (const name of ['java', 'javac']) {
+      try { if (!(await stat(path.join(installation.javaHome, 'bin', name + suffix))).isFile()) throw new Error(t("Not a file")); }
+      catch { throw new Error(t("Installation {0} is incomplete. Reinstall it.", installation.version)); }
+    }
+  }
+  async defaultInstallation(target: Target): Promise<Installation | undefined> {
+    const config = await readJson<{ defaultId?: string }>(path.join(this.root, 'config.json'));
+    if (!config?.defaultId) return undefined;
+    const result = (await this.list(target)).find(i => i.id === config.defaultId);
+    if (!result) throw new Error(t("Default JDK is missing or incompatible. Run nova default <installed-version>."));
+    await this.check(result);
+    return result;
+  }
+  async setDefault(selector: string, target: Target): Promise<Installation> {
+    return withLock(this.root, async () => {
+      const installation = await this.resolve(selector, target);
+      await atomicJson(path.join(this.root, 'config.json'), { ...await readSettings(this.root), defaultId: installation.id });
+      return installation;
+    });
+  }
+  async install(artifact: Artifact, download: (url: string) => Promise<Response> = fetchDownload, progress: (bytes: number, total: number) => void = () => {}): Promise<Installation> {
+    return withLock(this.root, async () => {
+      const id = installationId(artifact);
+      const existing = (await this.list()).find(i => i.id === id);
+      if (existing) { await this.check(existing); return existing; }
+      const tmpRoot = path.join(this.root, 'tmp');
+      await mkdir(tmpRoot, { recursive: true });
+      const temporary = await mkdtemp(path.join(tmpRoot, 'install-'));
+      try {
+        const archive = path.join(temporary, `jdk.${artifact.format}`);
+        const response = await download(artifact.url);
+        if (!response.ok || !response.body) throw new Error(t("Download failed: HTTP {0}", response.status));
+        const hash = createHash('sha256');
+        let bytes = 0;
+        const total = Number(response.headers.get('content-length') ?? 0);
+        const meter = new Transform({ transform(chunk: Buffer, _encoding, callback) {
+          hash.update(chunk); bytes += chunk.length; progress(bytes, total); callback(null, chunk);
+        } });
+        await pipeline(Readable.fromWeb(response.body as import('node:stream/web').ReadableStream), meter, createWriteStream(archive, { flags: 'wx', mode: 0o600 }), { signal: cancellation.signal });
+        if (hash.digest('hex') !== artifact.sha256.toLowerCase()) throw new Error(t("SHA-256 mismatch. Installation cancelled."));
+        cancellation.signal.throwIfAborted();
+        const payload = path.join(temporary, 'payload');
+        await extractArchive(archive, payload, artifact.format);
+        const javaHome = await findJavaHome(payload, artifact.platform);
+        await validateRelease(javaHome, artifact);
+        const destination = path.join(this.root, 'jdks', id);
+        const installed: Installation = { ...artifact, id, javaHome: path.join(destination, path.relative(payload, javaHome)), installedAt: new Date().toISOString() };
+        await atomicJson(path.join(payload, 'nova.json'), installed);
+        await mkdir(path.dirname(destination), { recursive: true });
+        cancellation.signal.throwIfAborted();
+        await rename(payload, destination);
+        return installed;
+      } finally { await rm(temporary, { recursive: true, force: true }); }
+    });
+  }
+  async uninstall(selector: string, target: Target, activeId?: string): Promise<void> {
+    if (!normalizeVersion(selector).includes('.')) throw new Error(t("uninstall requires an exact version from nova ls."));
+    await withLock(this.root, async () => {
+      // Do not require intact binaries: broken installations must be removable.
+      const item = selectVersion(await this.list(target), selector);
+      if (!item) throw new Error(t("Corretto {0} is not installed.", selector));
+      const config = await readJson<{ defaultId?: string }>(path.join(this.root, 'config.json'));
+      if (config?.defaultId === item.id) throw new Error(t("Cannot uninstall the default JDK. Select another default first."));
+      if (activeId === item.id) throw new Error(t("Cannot uninstall the current JDK. Run nova deactivate or nova use first."));
+      await rm(path.join(this.root, 'jdks', item.id), { recursive: true });
+    });
+  }
+}
+export async function projectVersion(start = process.cwd()): Promise<string> {
+  let directory = path.resolve(start);
+  for (;;) {
+    const file = path.join(directory, '.novarc');
+    try {
+      const content = (await readFile(file, 'utf8')).trim();
+      const version = normalizeVersion(content);
+      if (!version.includes('.')) throw new Error(t(".novarc must contain one exact Corretto version."));
+      return version;
+    } catch (error) { if (!isMissing(error)) throw error; }
+    const parent = path.dirname(directory);
+    if (parent === directory) throw new Error(t("No .novarc found. Specify a version or run nova pin <version>."));
+    directory = parent;
+  }
+}
+export async function pinVersion(version: string, directory = process.cwd()): Promise<void> {
+  await writeFile(path.join(directory, '.novarc'), normalizeVersion(version) + '\n', 'utf8');
+}

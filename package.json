@@ -1,0 +1,38 @@
+{
+  "name": "nova-jdk",
+  "version": "0.1.0",
+  "description": "Cross-platform Amazon Corretto JDK version manager",
+  "type": "module",
+  "bin": {
+    "nova": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run build && vitest run",
+    "prepack": "npm run build",
+    "smoke": "npm run build && node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "commander": "^14.0.0",
+    "tar": "^7.5.0",
+    "yauzl": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/yauzl": "^2.10.3",
+    "@types/yazl": "^3.3.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.11",
+    "yazl": "^3.3.1"
+  },
+  "license": "MIT"
+}
