@@ -1,6 +1,6 @@
 import { t } from './i18n.js';
 import { createWriteStream } from 'node:fs';
-import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readlink, readdir, realpath, rename, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -10,7 +10,7 @@ import { extractArchive, findJavaHome, validateRelease } from './archive.js';
 import { atomicJson, isMissing, readJson, withLock } from './fs-utils.js';
 import { cancellation, fetchDownload } from './network.js';
 import { normalizeVersion, selectVersion } from './versions.js';
-import { sameTarget, type Artifact, type Installation, type Target } from './types.js';
+import { isInstallation, sameTarget, type Artifact, type Installation, type Target } from './types.js';
 import { readSettings } from './settings.js';
 
 export function novaRoot(): string {
@@ -22,13 +22,18 @@ export function installationId(artifact: Artifact): string {
 export function stableHome(root: string, target: Target): string {
   return path.join(root, 'current', `${target.platform}-${target.arch}`);
 }
+function within(root: string, child: string): boolean {
+  const rootKey = process.platform === 'win32' ? root.toLowerCase() : root;
+  const childKey = process.platform === 'win32' ? child.toLowerCase() : child;
+  return childKey === rootKey || childKey.startsWith(rootKey + path.sep);
+}
 export class Store {
   constructor(readonly root: string = novaRoot()) {}
   async jdkDirectory(): Promise<string> {
     const configured = (await readSettings(this.root)).jdkDir;
     return configured ? path.resolve(configured) : path.join(this.root, 'jdks');
   }
-  async list(target?: Target): Promise<Installation[]> {
+  async list(target?: Target, report: (message: string) => void = () => {}): Promise<Installation[]> {
     const directory = await this.jdkDirectory();
     let entries;
     try { entries = await readdir(directory, { withFileTypes: true }); }
@@ -36,10 +41,15 @@ export class Store {
     const installs: Installation[] = [];
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
-      const record = await readJson<Installation>(path.join(directory, entry.name, 'nova.json'));
+      let record: Installation | undefined;
+      try { record = await readJson<Installation>(path.join(directory, entry.name, 'nova.json')); }
+      catch (error) { report(t("Cannot read installation record {0}: {1}", entry.name, String(error))); continue; }
       if (!record) continue;
       const installRoot = path.join(directory, entry.name);
-      if (record.id !== entry.name || installationId(record) !== entry.name || !path.resolve(record.javaHome).startsWith(installRoot + path.sep)) throw new Error(t("Invalid installation record: {0}", entry.name));
+      const resolvedHome = path.resolve(record.javaHome);
+      if (!isInstallation(record) || record.id !== entry.name || installationId(record) !== entry.name || !within(installRoot, resolvedHome)) {
+        report(t("Invalid installation record: {0}", entry.name)); continue;
+      }
       if (!target || sameTarget(record, target)) installs.push(record);
     }
     return installs;
@@ -71,40 +81,68 @@ export class Store {
         const entries = await readdir(destination);
         if (entries.length) throw new Error(t("JDK directory is not empty: {0}", destination));
       } catch (error) { if (!isMissing(error)) throw error; }
-      const records: Array<{ record: Installation; relativeHome: string }> = [];
+      const records: Array<{ record: Installation; relativeHome: string; file: string; original: string }> = [];
       try {
         for (const entry of await readdir(source, { withFileTypes: true })) {
           if (!entry.isDirectory()) continue;
           const file = path.join(source, entry.name, 'nova.json');
-          const record = await readJson<Installation>(file);
-          if (record) records.push({ record, relativeHome: path.relative(source, record.javaHome) });
+          const original = await readFile(file, 'utf8');
+          const record = JSON.parse(original) as unknown;
+          if (!isInstallation(record) || record.id !== entry.name || installationId(record) !== entry.name || !within(path.join(source, entry.name), path.resolve(record.javaHome))) throw new Error(t("Invalid installation record: {0}", entry.name));
+          records.push({ record, relativeHome: path.relative(source, record.javaHome), file, original });
         }
       } catch (error) { if (!isMissing(error)) throw error; }
       await mkdir(path.dirname(destination), { recursive: true });
-      try { await rename(source, destination); } catch (error) {
+      let moved = false;
+      try { await rename(source, destination); moved = true; } catch (error) {
         if (!isMissing(error)) throw error;
         await mkdir(destination, { recursive: true });
       }
-      for (const { record, relativeHome } of records) {
-        const idFile = path.join(destination, record.id, 'nova.json');
-        await atomicJson(idFile, { ...record, javaHome: path.join(destination, relativeHome) });
+      const configFile = path.join(this.root, 'config.json');
+      let originalConfig: string | undefined;
+      try { originalConfig = await readFile(configFile, 'utf8'); } catch (error) { if (!isMissing(error)) throw error; }
+      const oldLinks: Array<{ link: string; target?: string }> = [];
+      for (const { record } of records) {
+        const link = stableHome(this.root, record);
+        try { oldLinks.push({ link, target: await readlink(link) }); } catch (error) { if (!isMissing(error)) throw error; oldLinks.push({ link }); }
       }
-      const settings = await readSettings(this.root);
-      const next = { ...settings };
-      if (destination === path.join(this.root, 'jdks')) delete next.jdkDir;
-      else next.jdkDir = destination;
-      await atomicJson(path.join(this.root, 'config.json'), next);
-      // Absolute links point into the old directory, so recreate each target.
-      for (const item of await this.list()) {
-        const link = stableHome(this.root, item);
-        await rm(link, { recursive: true, force: true });
-        await symlink(item.javaHome, link, process.platform === 'win32' ? 'junction' : 'dir');
+      try {
+        for (const { record, relativeHome } of records) await atomicJson(path.join(destination, record.id, 'nova.json'), { ...record, javaHome: path.join(destination, relativeHome) });
+        const settings = await readSettings(this.root);
+        const next = { ...settings };
+        if (destination === path.join(this.root, 'jdks')) delete next.jdkDir;
+        else next.jdkDir = destination;
+        await atomicJson(configFile, next);
+        for (const { record, relativeHome } of records) {
+          const link = stableHome(this.root, record);
+          await rm(link, { recursive: true, force: true });
+          await symlink(path.join(destination, relativeHome), link, process.platform === 'win32' ? 'junction' : 'dir');
+        }
+        return destination;
+      } catch (error) {
+        if (moved) {
+          await rename(destination, source).catch(() => {});
+          for (const item of records) await atomicJson(item.file, JSON.parse(item.original));
+        }
+        if (originalConfig === undefined) await rm(configFile, { force: true });
+        else await writeFile(configFile, originalConfig, 'utf8');
+        for (const { link, target } of oldLinks) {
+          await rm(link, { recursive: true, force: true });
+          if (target) await symlink(target, link, process.platform === 'win32' ? 'junction' : 'dir');
+        }
+        throw error;
       }
-      return destination;
     });
   }
   async check(installation: Installation): Promise<void> {
     const suffix = installation.platform === 'windows' ? '.exe' : '';
+    try {
+      const root = await realpath(path.join(await this.jdkDirectory(), installation.id));
+      const home = await realpath(installation.javaHome);
+      if (!within(root, home)) throw new Error(t('JDK executable escapes installation directory.'));
+    } catch (error) {
+      if (!isMissing(error)) throw new Error(t("Installation {0} is incomplete. Reinstall it.", installation.version));
+    }
     for (const name of ['java', 'javac']) {
       try { if (!(await stat(path.join(installation.javaHome, 'bin', name + suffix))).isFile()) throw new Error(t("Not a file")); }
       catch { throw new Error(t("Installation {0} is incomplete. Reinstall it.", installation.version)); }

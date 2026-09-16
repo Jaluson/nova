@@ -3,7 +3,7 @@ import path from 'node:path';
 import { atomicJson, readJson } from './fs-utils.js';
 import { cancellation, officialDownload } from './network.js';
 import { majorOf, normalizeVersion, selectVersion } from './versions.js';
-import { sameTarget, type Artifact, type Provider, type Target } from './types.js';
+import { isArtifact, sameTarget, type Artifact, type Provider, type Target } from './types.js';
 
 export interface Release { tag_name: string; draft: boolean; prerelease: boolean; body: string | null }
 interface Cache { schema: 1; fetchedAt: number; artifacts: Artifact[] }
@@ -43,6 +43,11 @@ export class CorrettoProvider implements Provider {
     let cache: Cache | undefined;
     try { cache = await readJson<Cache>(file); } catch { /* A bad cache can be rebuilt. */ }
     if (cache?.schema !== 1 || !Array.isArray(cache.artifacts) || !Number.isFinite(cache.fetchedAt)) cache = undefined;
+    else cache.artifacts = cache.artifacts.filter(item => {
+      if (!isArtifact(item)) return false;
+      try { return majorOf(item.version) === major; } catch { return false; }
+    });
+    if (cache && !cache.artifacts.length) cache = undefined;
     if (!refresh && cache && Date.now() - cache.fetchedAt < 3_600_000) return cache.artifacts;
     try {
       const artifacts: Artifact[] = [];

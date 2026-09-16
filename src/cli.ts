@@ -14,6 +14,7 @@ import { cancellation } from './network.js';
 import { currentJdk, type CurrentJdk } from './current.js';
 import { displayList, type ListOptions, type ListRow } from './list-view.js';
 import { readSettings, saveLanguage } from './settings.js';
+import { readLock, repairLock } from './fs-utils.js';
 import { localizeCommander } from './command-i18n.js';
 import { latestVersion, updatePackage } from './update.js';
 
@@ -257,15 +258,32 @@ program.command('init <shell>').description(t("Emit Shell initialization code (C
     try { startup = await envChanges('default'); } catch (error) { console.error(t("Warning: {0}", String(error))); }
     process.stdout.write(integration(shell) + render(startup, shell));
   });
-program.command('doctor').description(t("Check Shell integration and Java environment")).action(async () => {
+program.command('doctor').description(t("Check Shell integration and Java environment"))
+  .option('--repair-lock', t('Remove a stale write lock after inspection'))
+  .action(async (options: { repairLock?: boolean }) => {
   let failures = 0;
   const report = (ok: boolean, message: string) => { console.log(t("{0}  {1}", ok ? t('OK') : t('FAIL'), message)); if (!ok) failures++; };
+  const lock = await readLock(store.root);
+  if (lock) {
+    const details = `${lock.pid === undefined ? t('unknown PID') : `PID ${lock.pid}`}${lock.createdAt ? `, ${lock.createdAt}` : ''}`;
+    report(false, t('Write lock present: {0}', details));
+    if (options.repairLock) {
+      let active = false;
+      if (lock.pid !== undefined && lock.pid !== process.pid) {
+        try { process.kill(lock.pid, 0); active = true; } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === 'EPERM') active = true;
+        }
+      }
+      if (active) console.error(t('Write lock is held by a running process.'));
+      else { await repairLock(store.root); console.log(t('Removed write lock.')); }
+    }
+  } else if (options.repairLock) console.log(t('No write lock found.'));
   report(Boolean(process.env.NOVA_SHELL), t("Shell integration: {0}", process.env.NOVA_SHELL ?? t('not initialized')));
   console.log(t("NOVA_HOME: {0}", store.root));
   try { await stat(stableHome(store.root, hostTarget())); report(true, t('Stable JAVA_HOME link exists')); }
   catch { report(false, t('Stable JAVA_HOME link is missing')); }
   try {
-    const list = await store.list(hostTarget());
+    const list = await store.list(hostTarget(), message => report(false, message));
     for (const item of list) { try { await store.check(item); report(true, t("Installed {0}", item.version)); } catch (error) { report(false, String(error)); } }
     const def = await store.defaultInstallation(hostTarget());
     console.log(t("Default: {0}", def?.version ?? t('not set')));

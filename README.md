@@ -150,6 +150,7 @@ The configured path is stored in `config.json` as `jdkDir`. Metadata, locks, cac
 nova config
 nova config language zh-CN
 nova config jdk-dir /data/nova-jdks
+nova doctor --repair-lock               # explicitly remove a stale write lock
 ```
 
 Nova does not provide installers, JREs, telemetry, automatic upgrades, or a custom mirror in this release. See [SECURITY.md](SECURITY.md) for reporting security issues.

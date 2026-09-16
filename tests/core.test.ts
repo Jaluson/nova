@@ -3,7 +3,7 @@ import path from 'node:path';
 import { mkdir, readFile, readdir, realpath, writeFile } from 'node:fs/promises';
 import { compareVersions, normalizeVersion, selectVersion } from '../src/versions.js';
 import { CorrettoProvider, parseRelease, type Release } from '../src/provider.js';
-import { atomicJson, withLock } from '../src/fs-utils.js';
+import { atomicJson, readLock, repairLock, withLock } from '../src/fs-utils.js';
 import { stableHome, Store, pinVersion, projectVersion } from '../src/store.js';
 import { safeArchivePath, safeLink } from '../src/archive.js';
 import { officialDownload } from '../src/network.js';
@@ -55,6 +55,16 @@ describe('Corretto provider', () => {
     expect(await provider.list(21, true)).toHaveLength(1);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('cached'));
     await expect(provider.list(17)).rejects.toThrow('403');
+  });
+  it('filters malformed cached artifacts while keeping valid offline entries', async () => {
+    const root = await temp();
+    await atomicJson(path.join(root, 'cache', 'corretto-21.json'), {
+      schema: 1, fetchedAt: Date.now(), artifacts: [artifact(), { ...artifact(), url: 'https://evil.example/jdk.tar.gz' }],
+    });
+    const request = vi.fn();
+    const provider = new CorrettoProvider(root, request);
+    await expect(provider.list(21)).resolves.toHaveLength(1);
+    expect(request).not.toHaveBeenCalled();
   });
   it('fails clearly for an unavailable platform', async () => {
     const provider = new CorrettoProvider(await temp(), vi.fn().mockResolvedValue(Response.json([release()])));
@@ -109,6 +119,22 @@ describe('storage and installation', () => {
       await expect(withLock(root, async () => {})).rejects.toThrow('Another nova write');
     });
     await expect(withLock(root, async () => 'ok')).resolves.toBe('ok');
+  });
+  it('reports and skips malformed installation records without hiding valid JDKs', async () => {
+    const store = new Store(await temp());
+    await seed(store, '21.0.9.11.1');
+    const broken = path.join(store.root, 'jdks', 'corretto-21.0.8.9.1-linux-x64');
+    await atomicJson(path.join(broken, 'nova.json'), { id: 'corretto-21.0.8.9.1-linux-x64', javaHome: path.join(store.root, 'outside'), provider: 'corretto' });
+    const messages: string[] = [];
+    expect(await store.list(target, message => messages.push(message))).toHaveLength(1);
+    expect(messages.join('\n')).toContain('Invalid installation record');
+  });
+  it('reads and explicitly repairs a write lock', async () => {
+    const root = await temp();
+    await writeFile(path.join(root, '.write-lock'), JSON.stringify({ pid: 123, createdAt: '2020-01-01T00:00:00.000Z' }));
+    expect(await readLock(root)).toMatchObject({ pid: 123, createdAt: '2020-01-01T00:00:00.000Z' });
+    expect(await repairLock(root)).toMatchObject({ pid: 123 });
+    await expect(readLock(root)).resolves.toBeUndefined();
   });
   it('resolves offline, pins exact builds and protects current/default installations', async () => {
     const store = new Store(await temp());

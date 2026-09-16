@@ -14,6 +14,22 @@ export interface Installation extends Artifact {
   javaHome: string;
   installedAt: string;
 }
+export function isArtifact(value: unknown): value is Artifact {
+  if (!value || typeof value !== 'object') return false;
+  const item = value as Partial<Artifact>;
+  if (item.provider !== 'corretto' || typeof item.version !== 'string' || !/^\d+(?:\.\d+)+$/.test(item.version)) return false;
+  if (!['linux', 'macos', 'windows'].includes(item.platform as string) || !['x64', 'aarch64'].includes(item.arch as string)) return false;
+  if (typeof item.url !== 'string' || typeof item.sha256 !== 'string' || !/^[a-f\d]{64}$/i.test(item.sha256)) return false;
+  if (item.format !== 'zip' && item.format !== 'tar.gz') return false;
+  try {
+    const url = new URL(item.url);
+    if (url.protocol !== 'https:' || !['corretto.aws', 'downloads.corretto.aws'].includes(url.hostname) || url.username || url.password || url.port) return false;
+  } catch { return false; }
+  return (item.platform === 'windows') === (item.format === 'zip');
+}
+export function isInstallation(value: unknown): value is Installation {
+  return isArtifact(value) && typeof (value as Partial<Installation>).id === 'string' && typeof (value as Partial<Installation>).javaHome === 'string' && typeof (value as Partial<Installation>).installedAt === 'string';
+}
 export interface Provider {
   list(major: number, refresh?: boolean): Promise<Artifact[]>;
   resolve(selector: string, target: Target): Promise<Artifact>;

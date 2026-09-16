@@ -75,6 +75,7 @@ nova ls --json                          # 已安装 JDK 的带 schema JSON
 nova config
 nova config language zh-CN
 nova config jdk-dir /data/nova-jdks
+nova doctor --repair-lock        # 明确删除残留写锁
 nova update --check       # 检查 nova 更新
 nova update               # 通过 npm 全局更新 nova
 nova install 21 --dry-run # 预览安装，不修改文件
