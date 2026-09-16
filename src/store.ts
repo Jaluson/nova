@@ -45,8 +45,10 @@ export class Store {
     return installs;
   }
   async resolve(selector: string, target: Target): Promise<Installation> {
-    const result = selectVersion(await this.list(target), selector);
-    if (!result) throw new Error(t("Corretto {0} is not installed. Run nova install {1}.", selector, selector));
+    const aliases = (await readSettings(this.root)).aliases ?? {};
+    const resolvedSelector = aliases[selector] ?? selector;
+    const result = selectVersion(await this.list(target), resolvedSelector);
+    if (!result) throw new Error(t("Corretto {0} is not installed. Run nova install {1}.", selector, resolvedSelector));
     await this.check(result);
     return result;
   }
@@ -174,9 +176,13 @@ export class Store {
 export async function projectVersion(start = process.cwd()): Promise<string> {
   let directory = path.resolve(start);
   for (;;) {
-    const file = path.join(directory, '.novarc');
+    let selected: string | undefined;
+    for (const name of ['.novarc', '.nova-version', '.java-version']) {
+      try { await stat(path.join(directory, name)); selected = path.join(directory, name); break; } catch (error) { if (!isMissing(error)) throw error; }
+    }
+    selected ??= path.join(directory, '.novarc');
     try {
-      const content = (await readFile(file, 'utf8')).trim();
+      const content = (await readFile(selected, 'utf8')).trim();
       const version = normalizeVersion(content);
       if (!version.includes('.')) throw new Error(t(".novarc must contain one exact Corretto version."));
       return version;

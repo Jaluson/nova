@@ -77,6 +77,10 @@ nova config language zh-CN
 nova config jdk-dir /data/nova-jdks
 nova update --check       # 检查 nova 更新
 nova update               # 通过 npm 全局更新 nova
+nova install 21 --dry-run # 预览安装，不修改文件
+nova alias lts 21.0.9.11.1
+nova use lts
+nova uninstall 21.0.9.11.1 --yes  # 脚本中跳过确认
 ```
 
 使用 `nova jdk-dir` 查看 JDK 存储目录，传入新目录可以移动所有已下载的 JDK：

@@ -2,6 +2,7 @@
 import { getLanguage, languageFlag, parseLanguage, resolveLanguage, setLanguage, systemLanguage, t } from './i18n.js';
 import { Command, InvalidArgumentError, Option } from 'commander';
 import { access, readFile, writeFile } from 'node:fs/promises';
+import { createInterface } from 'node:readline';
 import { constants } from 'node:fs';
 import path from 'node:path';
 import { stableHome, Store, pinVersion, projectVersion } from './store.js';
@@ -50,8 +51,10 @@ program.command('language [language]').description(t('Show or save language pref
   });
 
 program.command('jdk-dir [directory]').description(t('Show or move the directory used for downloaded JDKs'))
-  .action(async (directory?: string) => {
+  .option('--dry-run', t('Show the destination without moving files'))
+  .action(async (directory?: string, options: { dryRun?: boolean } = {}) => {
     if (directory === undefined) { console.log(await store.jdkDirectory()); return; }
+    if (options.dryRun) { console.log(t('Would move JDKs to: {0}', path.resolve(directory))); return; }
     const moved = await store.relocateJdks(directory);
     console.log(t('JDK directory: {0}', moved));
   });
@@ -69,13 +72,25 @@ program.command('config [key] [value]').description(t('Show or update nova confi
     }
     throw new Error(t('Unknown configuration key: {0}. Use language or jdk-dir.', key));
   });
+program.command('alias [name] [version]').description(t('Show or set a version alias'))
+  .action(async (name?: string, version?: string) => {
+    const settings = await readSettings(store.root);
+    if (name === undefined) { console.log(JSON.stringify(settings.aliases ?? {}, null, 2)); return; }
+    if (version === undefined) { console.log(settings.aliases?.[name] ?? t('Alias is not set: {0}', name)); return; }
+    const item = await store.resolve(version, hostTarget());
+    const aliases = { ...(settings.aliases ?? {}), [name]: item.version };
+    const { atomicJson, withLock } = await import('./fs-utils.js');
+    await withLock(store.root, async () => atomicJson(path.join(store.root, 'config.json'), { ...await readSettings(store.root), aliases }));
+    console.log(t('Alias {0}: {1}', name, item.version));
+  });
 program.command('update').description(t('Check for and install the latest nova version'))
   .option('--check', t('Only check whether an update is available'))
-  .action(async (options: { check?: boolean }) => {
+  .option('--dry-run', t('Show the update without installing it'))
+  .action(async (options: { check?: boolean; dryRun?: boolean }) => {
     const info = await latestVersion(pkg.version);
     if (!info.updateAvailable) { console.log(t('nova is already up to date ({0}).', info.current)); return; }
     console.log(t('New nova version available: {0} (current {1}).', info.latest, info.current));
-    if (options.check) return;
+    if (options.check || options.dryRun) return;
     console.log(t('Updating nova globally...'));
     await updatePackage();
     console.log(t('nova updated to {0}.', info.latest));
@@ -152,12 +167,14 @@ listOptions(program.command('ls-remote [major]').description(t("Browse verified 
     if (!visible.length && !process.exitCode) console.log(t("No verified portable JDKs available for this platform."));
   });
 program.command('install <version>').description(t("Install a major’s latest patch or an exact Corretto version"))
-  .action(async (version: string) => {
+  .option('--dry-run', t('Show what would be installed without changing anything'))
+  .action(async (version: string, options: { dryRun?: boolean }) => {
     const target = hostTarget();
     const normalized = normalizeVersion(version);
     const local = normalized.includes('.') ? (await store.list(target)).find(i => i.version === normalized) : undefined;
     if (local) { await store.check(local); console.log(t("Already installed: {0}", local.version)); return; }
     const artifact = await provider.resolve(version, target);
+    if (options.dryRun) { console.log(t('Would install Corretto {0} ({1}/{2}).', artifact.version, artifact.platform, artifact.arch)); return; }
     console.error(t("Installing Corretto {0} ({1}/{2})", artifact.version, artifact.platform, artifact.arch));
     let lastProgress = 0;
     const installed = await store.install(artifact, undefined, (bytes, total) => {
@@ -207,7 +224,13 @@ program.command('pin [version]').description(t("Write an exact installed version
   await pinVersion(selected.version);
   console.log(t("Pinned Corretto {0} in {1}", selected.version, path.join(process.cwd(), '.novarc')));
 });
-program.command('uninstall <exact-version>').description(t("Remove an installed JDK (except current/default)")).action(async (version: string) => {
+program.command('uninstall <exact-version>').description(t("Remove an installed JDK (except current/default)"))
+  .option('--yes', t('Skip the confirmation prompt'))
+  .action(async (version: string, options: { yes?: boolean }) => {
+  if (!options.yes && process.stdin.isTTY) {
+    const answer = await new Promise<string>(resolve => { const rl = createInterface({ input: process.stdin, output: process.stderr }); rl.question(t('Uninstall Corretto {0}? [y/N] ', version), value => { rl.close(); resolve(value); }); });
+    if (!/^y(?:es)?$/i.test(answer.trim())) { console.log(t('Cancelled.')); return; }
+  }
   await store.uninstall(version, hostTarget(), process.env.NOVA_ACTIVE);
   console.log(t("Uninstalled Corretto {0}", normalizeVersion(version)));
 });

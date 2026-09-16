@@ -90,6 +90,7 @@ Useful commands:
 | `nova jdk-dir [directory]` | Show or move the downloaded JDK directory |
 | `nova config [key] [value]` | Show or update configuration |
 | `nova update [--check]` | Check for or install the latest nova release |
+| `nova alias [name] [version]` | Create a reusable version alias |
 
 Supported Corretto major versions currently include 8, 11, 17, 21, 25, and 26. The remote index determines which exact releases are available for a platform.
 
@@ -102,6 +103,10 @@ nova ls-remote 21 --json                # versioned JSON for scripts
 nova ls --json                          # installed JDKs as versioned JSON
 nova update --check                      # check for a newer nova release
 nova update                             # update nova globally via npm
+nova install 21 --dry-run               # preview an installation
+nova uninstall 21.0.9.11.1 --yes       # skip uninstall confirmation in scripts
+nova alias lts 21.0.9.11.1
+nova use lts
 ```
 
 ## Language support
@@ -123,6 +128,8 @@ Language precedence is `--lang`, `NOVA_LANG`, saved preference, then the system 
 Interactive `ls` and `ls-remote` use compact pages. Use `--all` for a complete list, `--page` for a static page, and `--verbose` to include paths. A pipe receives plain output without terminal controls.
 
 If `JAVA_HOME` already points to a valid JDK, `nova ls` shows it as an external JDK without importing, moving, or deleting it. The first nova activation remembers that value, and `nova deactivate` restores it. Nova manages only its own Corretto installations.
+
+Project version files are checked in this order: `.novarc`, `.nova-version`, then `.java-version`. Each file must contain one exact installed Corretto version.
 
 ## Data and security
 
