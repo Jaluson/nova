@@ -1,7 +1,23 @@
 {
   "name": "nova-jdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cross-platform Amazon Corretto JDK version manager",
+  "keywords": [
+    "jdk",
+    "java",
+    "version-manager",
+    "corretto",
+    "nvm",
+    "cli"
+  ],
+  "homepage": "https://github.com/Jaluson/nova#readme",
+  "bugs": {
+    "url": "https://github.com/Jaluson/nova/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaluson/nova.git"
+  },
   "type": "module",
   "bin": {
     "nova": "dist/cli.js"
@@ -9,6 +25,8 @@
   "files": [
     "dist",
     "README.md",
+    "README.zh-CN.md",
+    "SECURITY.md",
     "LICENSE"
   ],
   "engines": {
