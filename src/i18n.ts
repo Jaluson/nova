@@ -1,4 +1,6 @@
 export const zhCN = {
+  'more above': '条在上方',
+  'more below': '条在下方',
   'Activating Corretto {0}': '正在启用 Corretto {0}',
   'Completed': '已完成',
   'Downloaded {0} MiB{1}': '已下载 {0} MiB{1}',
