@@ -72,7 +72,7 @@ export function renderPage(rows: ListRow[], layout: ListLayout, options: ListOpt
       return fit(index === selected ? paint('7', `› ${styled}`) : `  ${styled}`, width);
     }),
     '', fit(t('{0}-{1} / {2}  |  Page {3}/{4}', start + 1, start + visible.length, rows.length, page, pages), width)];
-  if (interactive) lines.push(fit(`${t('q: quit first  |  ↑/↓: select  |  Enter: choose  |  n/p: page  |  /: search')}`, width));
+  if (interactive) lines.push(fit(`${t('q: quit first  |  ↑/↓: select  |  Enter: close  |  n/p: page')}`, width));
   else if (pages > 1) lines.push(fit(t('Use --page <n> to navigate, or --all for the full list.'), width));
   if (options.verbose && !interactive) lines.push(fit(t('Full paths: --all'), width));
   return lines.join('\n') + '\n';

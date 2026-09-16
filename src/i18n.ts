@@ -156,6 +156,7 @@ export const zhCN = {
   'Disable colors in the terminal interface': '禁用终端界面颜色',
   '↑/↓: select  |  Enter: choose  |  n/p: page  |  /: search  |  q: quit': '↑/↓：选择  |  Enter：确认  |  n/p：翻页  |  /：搜索  |  q：退出',
   'q: quit first  |  ↑/↓: select  |  Enter: choose  |  n/p: page  |  /: search': 'q：退出  |  ↑/↓：选择  |  Enter：确认  |  n/p：翻页  |  /：搜索',
+  'q: quit first  |  ↑/↓: select  |  Enter: close  |  n/p: page': 'q：退出  |  ↑/↓：选择  |  Enter：关闭  |  n/p：翻页',
   'Stable JAVA_HOME link exists': '稳定 JAVA_HOME 链接存在',
   'Stable JAVA_HOME link is missing': '稳定 JAVA_HOME 链接缺失',
   'Output JSON for scripts and automation': '输出 JSON，便于脚本和自动化使用',
