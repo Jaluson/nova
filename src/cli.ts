@@ -131,7 +131,8 @@ function listOptions(command: Command): Command {
     .addOption(new Option('--all', t("Print the full list without paging")).conflicts(['page', 'pageSize']))
     .option('--page <number>', t("Print one page without interactive browsing"), positiveInteger)
     .option('--page-size <number>', t("Versions per page (default: 20, limited by terminal height)"), positiveInteger)
-    .option('--json', t('Output JSON for scripts and automation'));
+    .option('--json', t('Output JSON for scripts and automation'))
+    .option('--no-color', t('Disable colors in the terminal interface'));
 }
 function platformOption(value: string): 'linux' | 'macos' | 'windows' {
   if (!['linux', 'macos', 'windows'].includes(value)) throw new InvalidArgumentError(t('Expected platform: linux, macos, or windows.'));

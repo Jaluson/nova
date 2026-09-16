@@ -10,7 +10,7 @@ export interface ListRow {
   plain: string;
   priority?: number;
 }
-export interface ListOptions { all?: boolean; page?: number; pageSize?: number; verbose?: boolean; json?: boolean; jsonData?: unknown }
+export interface ListOptions { all?: boolean; page?: number; pageSize?: number; verbose?: boolean; json?: boolean; jsonData?: unknown; noColor?: boolean }
 export interface ListLayout { title: string; statuses?: boolean }
 
 const segments = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
@@ -50,7 +50,7 @@ export function pageSize(options: ListOptions, terminalRows?: number): number {
   const requested = options.pageSize ?? 20;
   return terminalRows ? Math.min(requested, Math.max(1, terminalRows - 8)) : requested;
 }
-export function renderPage(rows: ListRow[], layout: ListLayout, options: ListOptions, page: number, size: number, width: number, interactive: boolean): string {
+export function renderPage(rows: ListRow[], layout: ListLayout, options: ListOptions, page: number, size: number, width: number, interactive: boolean, selected = -1): string {
   const pages = Math.max(1, Math.ceil(rows.length / size));
   if (page < 1 || page > pages) throw new Error(t("Page {0} is out of range (1-{1}).", page, pages));
   const start = (page - 1) * size;
@@ -63,10 +63,16 @@ export function renderPage(rows: ListRow[], layout: ListLayout, options: ListOpt
     if (options.verbose) columns.push(detail);
     return fit(columns.join('  ').trimEnd(), width);
   };
-  const lines = [fit(`${layout.title} (${rows.length})`, width), '', format(t('VERSION'), t('STATUS'), t('PATH')),
-    ...visible.map(row => format(row.version, row.status ?? '', row.detail ?? '')),
+  const color = interactive && !options.noColor && process.env.NO_COLOR === undefined;
+  const paint = (code: string, value: string) => color ? `\x1b[${code}m${value}\x1b[0m` : value;
+  const lines = [paint('1;36', fit(`${layout.title} (${rows.length})`, width)), '', paint('1', format(t('VERSION'), t('STATUS'), t('PATH'))),
+    ...visible.map((row, index) => {
+      const line = format(row.version, row.status ?? '', row.detail ?? '');
+      const styled = row.status?.includes(t('latest')) || row.status?.includes('latest') ? paint('32', line) : line;
+      return fit(index === selected ? paint('7', `› ${styled}`) : `  ${styled}`, width);
+    }),
     '', fit(t('{0}-{1} / {2}  |  Page {3}/{4}', start + 1, start + visible.length, rows.length, page, pages), width)];
-  if (interactive) lines.push(fit(t('q: quit  |  n/p or arrows: page  |  Home/End'), width));
+  if (interactive) lines.push(fit(`${t('q: quit first  |  ↑/↓: select  |  Enter: choose  |  n/p: page  |  /: search')}`, width));
   else if (pages > 1) lines.push(fit(t('Use --page <n> to navigate, or --all for the full list.'), width));
   if (options.verbose && !interactive) lines.push(fit(t('Full paths: --all'), width));
   return lines.join('\n') + '\n';
@@ -87,6 +93,7 @@ export async function displayList(rows: ListRow[], layout: ListLayout, options: 
   const width = () => terminal ? Math.max(1, (process.stdout.columns || 80) - 1) : 100;
   const size = () => pageSize(options, terminal ? process.stdout.rows || 24 : undefined);
   let page = options.page ?? 1;
+  let selected = 0;
   const canBrowse = terminal && Boolean(process.stdin.isTTY) && options.page === undefined && ordered.length > size();
   if (!canBrowse) {
     process.stdout.write(renderPage(ordered, layout, options, page, size(), width(), false));
@@ -99,7 +106,7 @@ export async function displayList(rows: ListRow[], layout: ListLayout, options: 
     let closed = false;
     const draw = () => {
       page = Math.min(page, Math.max(1, Math.ceil(ordered.length / size())));
-      process.stdout.write('\x1b[H\x1b[2J' + renderPage(ordered, layout, options, page, size(), width(), true));
+      process.stdout.write('\x1b[H\x1b[2J' + renderPage(ordered, layout, options, page, size(), width(), true, selected));
     };
     const finish = (interrupted = false, error?: unknown) => {
       if (closed) return;
@@ -122,7 +129,10 @@ export async function displayList(rows: ListRow[], layout: ListLayout, options: 
       if (key.ctrl && key.name === 'c') { finish(true); return; }
       if (key.name === 'q' || key.name === 'escape') { finish(); return; }
       const last = Math.max(1, Math.ceil(ordered.length / size()));
-      if (['right', 'down', 'pagedown', 'n', 'space', 'return'].includes(key.name ?? '')) page = Math.min(last, page + 1);
+      if (key.name === 'down') selected = Math.min(Math.max(0, Math.min(size(), ordered.length - 1) - 1), selected + 1);
+      else if (key.name === 'up') selected = Math.max(0, selected - 1);
+      else if (key.name === 'return') { finish(); return; }
+      else if (['right', 'pagedown', 'n', 'space'].includes(key.name ?? '')) page = Math.min(last, page + 1);
       else if (['left', 'up', 'pageup', 'p', 'backspace'].includes(key.name ?? '')) page = Math.max(1, page - 1);
       else if (key.name === 'home') page = 1;
       else if (key.name === 'end') page = last;
