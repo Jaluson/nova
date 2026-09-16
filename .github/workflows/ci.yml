@@ -32,7 +32,8 @@ jobs:
       - name: Verify global package installation
         shell: bash
         run: |
-          npm install --global --prefix "$RUNNER_TEMP/nova-package" ./nova-jdk-0.1.0.tgz
+          PACKAGE_TARBALL="$(npm pack --silent)"
+          npm install --global --prefix "$RUNNER_TEMP/nova-package" "./$PACKAGE_TARBALL"
           if [ "$RUNNER_OS" = "Windows" ]; then
             "$RUNNER_TEMP/nova-package/nova.cmd" --version
           else

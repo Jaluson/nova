@@ -89,11 +89,11 @@ describe('list CLI output modes', () => {
     const parsed = JSON.parse(result.stdout) as { schema: number; items: Array<{ version: string; platform: string; arch: string }> };
     expect(parsed.schema).toBe(1);
     expect(parsed.items).toHaveLength(45);
-    expect(parsed.items[0]).toMatchObject({ platform: 'linux', arch: 'x64' });
+    expect(parsed.items[0]).toMatchObject({ platform: target.platform, arch: target.arch });
   });
   it('filters remote releases and keeps only the newest per major', async () => {
     const root = await remoteCache();
-    const result = run(['ls-remote', '--platform', 'linux', '--arch', 'x64', '--latest', '--json'], root);
+    const result = run(['ls-remote', '--platform', target.platform, '--arch', target.arch, '--latest', '--json'], root);
     expect(result.status, result.stderr).toBe(0);
     const parsed = JSON.parse(result.stdout) as { items: Array<{ version: string; latest: boolean }> };
     expect(parsed.items).toHaveLength(MAJORS.length);
