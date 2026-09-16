@@ -51,6 +51,15 @@ nova ls
 
 常用命令包括 `ls-remote`、`install`、`ls`、`use`、`default`、`current`、`pin`、`deactivate`、`uninstall`、`doctor` 和 `language`。支持的 Corretto 主版本目前包括 8、11、17、21、25、26，具体补丁版本由平台远程索引决定。
 
+使用 `nova jdk-dir` 查看 JDK 存储目录，传入新目录可以移动所有已下载的 JDK：
+
+```sh
+nova jdk-dir
+nova jdk-dir /data/nova-jdks
+```
+
+目标目录必须为空或不存在。nova 会同步移动完整目录、更新 `config.json` 和重建稳定链接；缓存、锁和 Shell 集成仍保留在 `NOVA_HOME` 下。
+
 ## 多语言
 
 CLI 当前支持英文和简体中文，默认跟随系统语言。版本号、路径和生成的 Shell 代码不会被翻译：

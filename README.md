@@ -85,6 +85,7 @@ Useful commands:
 | `nova uninstall <exact-version>` | Remove an installed version |
 | `nova doctor` | Diagnose installation and shell integration |
 | `nova language [language]` | Show or save the interface language |
+| `nova jdk-dir [directory]` | Show or move the downloaded JDK directory |
 
 Supported Corretto major versions currently include 8, 11, 17, 21, 25, and 26. The remote index determines which exact releases are available for a platform.
 
@@ -111,6 +112,15 @@ If `JAVA_HOME` already points to a valid JDK, `nova ls` shows it as an external 
 ## Data and security
 
 The default data directory is `~/.nova` (`%USERPROFILE%\\.nova` on Windows); set `NOVA_HOME` to use another location. Release metadata is cached locally. Downloads are checked against SHA-256 metadata before extraction, and archive paths and file types are validated before an installation is published.
+
+To move already downloaded JDKs, provide a new directory. It must be empty or not yet exist; nova moves the complete directory and updates the configuration and stable links together:
+
+```sh
+nova jdk-dir
+nova jdk-dir /data/nova-jdks
+```
+
+The configured path is stored in `config.json` as `jdkDir`. Metadata, locks, caches, and shell integration remain under `NOVA_HOME`.
 
 Nova does not provide installers, JREs, telemetry, automatic upgrades, or a custom mirror in this release. See [SECURITY.md](SECURITY.md) for reporting security issues.
 

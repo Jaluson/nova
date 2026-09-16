@@ -72,6 +72,18 @@ describe('storage and installation', () => {
     expect(await realpath(link)).toBe(await realpath(item.javaHome));
     expect(item.javaHome).not.toBe(link);
   });
+  it('moves all JDK files and rebuilds stable links when the directory changes', async () => {
+    const store = new Store(await temp());
+    await seed(store, '17.0.17.10.1');
+    const item = await store.resolve('17', target);
+    await store.activate(item, target);
+    const destination = path.join(await temp(), 'downloaded-jdks');
+    await store.relocateJdks(destination);
+    expect((await store.list(target))[0]?.javaHome).toContain(destination);
+    expect(await realpath(stableHome(store.root, target))).toBe(await realpath((await store.list(target))[0]!.javaHome));
+    await expect(readFile(path.join(store.root, 'jdks', item.id, 'nova.json'), 'utf8')).rejects.toThrow();
+    expect(JSON.parse(await readFile(path.join(store.root, 'config.json'), 'utf8')).jdkDir).toBe(destination);
+  });
   it.each(['tar.gz', 'zip'] as const)('installs %s after checksum verification and reuses an installation', async format => {
     const { item, bytes } = await archive(format);
     const store = new Store(await temp());

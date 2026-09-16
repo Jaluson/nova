@@ -24,8 +24,12 @@ export function stableHome(root: string, target: Target): string {
 }
 export class Store {
   constructor(readonly root: string = novaRoot()) {}
+  async jdkDirectory(): Promise<string> {
+    const configured = (await readSettings(this.root)).jdkDir;
+    return configured ? path.resolve(configured) : path.join(this.root, 'jdks');
+  }
   async list(target?: Target): Promise<Installation[]> {
-    const directory = path.join(this.root, 'jdks');
+    const directory = await this.jdkDirectory();
     let entries;
     try { entries = await readdir(directory, { withFileTypes: true }); }
     catch (error) { if (isMissing(error)) return []; throw error; }
@@ -54,6 +58,47 @@ export class Store {
       await rm(link, { recursive: true, force: true });
       await symlink(installation.javaHome, link, process.platform === 'win32' ? 'junction' : 'dir');
       return link;
+    });
+  }
+  async relocateJdks(directory: string): Promise<string> {
+    const destination = path.resolve(directory);
+    return withLock(this.root, async () => {
+      const source = await this.jdkDirectory();
+      if (path.resolve(source) === destination) return destination;
+      try {
+        const entries = await readdir(destination);
+        if (entries.length) throw new Error(t("JDK directory is not empty: {0}", destination));
+      } catch (error) { if (!isMissing(error)) throw error; }
+      const records: Array<{ record: Installation; relativeHome: string }> = [];
+      try {
+        for (const entry of await readdir(source, { withFileTypes: true })) {
+          if (!entry.isDirectory()) continue;
+          const file = path.join(source, entry.name, 'nova.json');
+          const record = await readJson<Installation>(file);
+          if (record) records.push({ record, relativeHome: path.relative(source, record.javaHome) });
+        }
+      } catch (error) { if (!isMissing(error)) throw error; }
+      await mkdir(path.dirname(destination), { recursive: true });
+      try { await rename(source, destination); } catch (error) {
+        if (!isMissing(error)) throw error;
+        await mkdir(destination, { recursive: true });
+      }
+      for (const { record, relativeHome } of records) {
+        const idFile = path.join(destination, record.id, 'nova.json');
+        await atomicJson(idFile, { ...record, javaHome: path.join(destination, relativeHome) });
+      }
+      const settings = await readSettings(this.root);
+      const next = { ...settings };
+      if (destination === path.join(this.root, 'jdks')) delete next.jdkDir;
+      else next.jdkDir = destination;
+      await atomicJson(path.join(this.root, 'config.json'), next);
+      // Absolute links point into the old directory, so recreate each target.
+      for (const item of await this.list()) {
+        const link = stableHome(this.root, item);
+        await rm(link, { recursive: true, force: true });
+        await symlink(item.javaHome, link, process.platform === 'win32' ? 'junction' : 'dir');
+      }
+      return destination;
     });
   }
   async check(installation: Installation): Promise<void> {
@@ -103,7 +148,7 @@ export class Store {
         await extractArchive(archive, payload, artifact.format);
         const javaHome = await findJavaHome(payload, artifact.platform);
         await validateRelease(javaHome, artifact);
-        const destination = path.join(this.root, 'jdks', id);
+      const destination = path.join(await this.jdkDirectory(), id);
         const installed: Installation = { ...artifact, id, javaHome: path.join(destination, path.relative(payload, javaHome)), installedAt: new Date().toISOString() };
         await atomicJson(path.join(payload, 'nova.json'), installed);
         await mkdir(path.dirname(destination), { recursive: true });
@@ -122,7 +167,7 @@ export class Store {
       const config = await readJson<{ defaultId?: string }>(path.join(this.root, 'config.json'));
       if (config?.defaultId === item.id) throw new Error(t("Cannot uninstall the default JDK. Select another default first."));
       if (activeId === item.id) throw new Error(t("Cannot uninstall the current JDK. Run nova deactivate or nova use first."));
-      await rm(path.join(this.root, 'jdks', item.id), { recursive: true });
+      await rm(path.join(await this.jdkDirectory(), item.id), { recursive: true });
     });
   }
 }

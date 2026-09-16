@@ -47,6 +47,13 @@ program.command('language [language]').description(t('Show or save language pref
     console.log(t('Language preference saved: {0}. Effective language: {1}.', preference, getLanguage()));
   });
 
+program.command('jdk-dir [directory]').description(t('Show or move the directory used for downloaded JDKs'))
+  .action(async (directory?: string) => {
+    if (directory === undefined) { console.log(await store.jdkDirectory()); return; }
+    const moved = await store.relocateJdks(directory);
+    console.log(t('JDK directory: {0}', moved));
+  });
+
 async function active(): Promise<Installation> {
   const item = (await store.list(hostTarget())).find(i => i.id === process.env.NOVA_ACTIVE);
   if (!item) throw new Error(t("No nova JDK active in this terminal. Initialize your shell and run nova use <version>."));
