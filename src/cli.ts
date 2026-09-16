@@ -33,6 +33,7 @@ program.name('nova').description(t("Manage Amazon Corretto portable JDKs"))
   .version(pkg.version, '-V, --version', t('output the version number'))
   .option('--lang <language>', t('Language for this command: en, zh-CN, or auto'), parseLanguage)
   .showHelpAfterError();
+program.addHelpText('after', `\n${t('Quick start:')}\n  ${t('nova init <shell>')}     ${t('Load shell integration (run once per terminal)')}\n  ${t('nova ls-remote 21')}     ${t('List available Corretto JDK 21 releases')}\n  ${t('nova install 21')}       ${t('Download and install the newest JDK 21')}\n  ${t('nova use 21')}           ${t('Switch this terminal to JDK 21')}\n  ${t('nova current')}          ${t('Show the JDK selected by JAVA_HOME')}\n\n${t('Tips:')}\n  ${t('Run nova <command> --help for command-specific options.')}\n  ${t('nova use changes the stable JAVA_HOME link; nova deactivate restores the previous JAVA_HOME.')}\n`);
 localizeCommander(program);
 
 program.command('language [language]').description(t('Show or save language preference (en, zh-CN, auto)'))
